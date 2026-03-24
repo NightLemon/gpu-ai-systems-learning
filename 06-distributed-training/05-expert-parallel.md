@@ -96,7 +96,8 @@ class TopKRouter(nn.Module):
 1. **辅助损失（Auxiliary Loss）**：鼓励均匀分配
 ```python
 # Load Balancing Loss
-def load_balance_loss(router_logits, num_experts):
+# 注意: top_k_indices 来自前面 Router 的输出
+def load_balance_loss(router_logits, top_k_indices, num_experts):
     # f_i: expert i 被选中的比例
     # P_i: router 分配给 expert i 的概率均值
     routing_probs = F.softmax(router_logits, dim=-1)

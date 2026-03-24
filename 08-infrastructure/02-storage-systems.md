@@ -106,8 +106,14 @@ Consolidated Checkpoint (保存后合并为 full):
   后台 IO 不阻塞训练
 
 PyTorch 2.0+ (torch.distributed.checkpoint):
+  # 基础接口: sharded 保存（同步，但各 rank 只写自己的 shard → 并行 IO）
   save(state_dict, storage_writer=FileSystemWriter(path))
-  → 支持 sharded + 异步
+  
+  # 异步保存需要额外封装:
+  # 1. 先将 state_dict 拷贝到 CPU（快，几秒）
+  # 2. 后台线程调用 save() 写入存储（慢，但不阻塞训练）
+  # PyTorch 2.4+ 的 AsyncCheckpointer 或自行实现 CPU offload + 后台写入
+  # ⚠️ 不是调 save() 就自动异步——默认是同步阻塞的
 ```
 
 ### Checkpoint 一致性问题

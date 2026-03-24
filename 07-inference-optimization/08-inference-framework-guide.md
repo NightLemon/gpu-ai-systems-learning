@@ -60,7 +60,7 @@ A: 可以。一种常见做法是用 vLLM 做开发/测试，TRT-LLM 做生产�
 
 **Q: 这些框架的 API 兼容吗？**
 
-A: vLLM、TGI、SGLang 都提供 OpenAI-compatible API。TRT-LLM 通过 Triton 后端也可以暴露 OpenAI API。所以切换框架时客户端代码通常不需要改。
+A: vLLM、SGLang 提供较完整的 OpenAI-compatible API（chat/completions、streaming 等），TGI 也有类似接口。TRT-LLM 本身不直接暴露 HTTP API，需要结合 Triton Inference Server 或额外的服务层做 API 适配。切换框架时客户端代码**不一定零改动**——streaming 行为、tool calling 支持、错误码格式、参数支持范围（如 logprobs、suffix）各框架实现程度不同，上线前需要逐项验证。
 
 ## 延伸阅读
 
