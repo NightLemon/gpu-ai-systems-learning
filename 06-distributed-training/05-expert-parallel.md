@@ -238,3 +238,18 @@ A: Token Choice（标准方式）是每个 token 选择 Top-K expert。Expert Ch
 - [Mixtral of Experts](https://arxiv.org/abs/2401.04088) — Jiang et al., 2024
 - [DeepSpeed MoE](https://www.deepspeed.ai/tutorials/mixture-of-experts/)
 - [GShard](https://arxiv.org/abs/2006.16668) — Lepikhin et al., 2020
+
+---
+
+## 术语表
+
+| 术语 | 说明 |
+|------|------|
+| **MoE（Mixture of Experts）** | 混合专家模型。FFN 层被替换为多个“专家”，每个 token 只激活其中 Top-K 个 |
+| **Expert** | MoE 中的一个 FFN 子网络。每个 Expert 结构相同但参数不同 |
+| **Router / Gate** | 决定每个 token 被发送到哪些 Expert 的软路由网络 |
+| **Expert Parallel（EP）** | 将不同 Expert 分布到不同 GPU 上的并行策略 |
+| **All-to-All** | 每个 GPU 向每个其他 GPU 发送不同数据的通信操作。MoE 中用于将 token 发送到对应 Expert 所在的 GPU |
+| **Capacity Factor** | 每个 Expert 可接受的最大 token 数的缩放系数，超过则丢弃 |
+| **Auxiliary Loss（辅助损失）** | 加在训练损失上的额外项，鼓励 Router 将 token 均匀分配给各 Expert |
+| **Grouped GEMM** | 将多个小 Expert 的 GEMM 合并为一个大 GEMM，提高 GPU 利用率 |

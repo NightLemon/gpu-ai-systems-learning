@@ -1,6 +1,6 @@
 # 量化（Quantization）
 
-> 用更少的 bit 表示权重和激活值——推理成本直降 2-4 倍。
+> 用更少的 bit 表示模型权重（和/或激活值），从而减少显存占用和带宽需求。例如，将 FP16（16 bit）权重量化为 INT4（4 bit）后，模型体积变为 1/4，推理速度可以显著提升。
 
 ## 核心概念
 
@@ -208,3 +208,19 @@ A: GGUF 是 llama.cpp 使用的量化格式，支持多种量化级别（Q2_K �
 - [AWQ 论文](https://arxiv.org/abs/2306.00978) — Lin et al., 2023
 - [SmoothQuant 论文](https://arxiv.org/abs/2211.10438) — Xiao et al., 2023
 - [FP8 Formats for Deep Learning](https://arxiv.org/abs/2209.05433) — Micikevicius et al., 2022
+
+---
+
+## 术语表
+
+| 术语 | 说明 |
+|------|------|
+| **量化（Quantization）** | 将浮点数用更少的 bit 表示（如 FP16→INT4），牺牲少量精度换取更小的模型体积和更快的速度 |
+| **W4A16** | Weight 4-bit, Activation 16-bit，只量化权重，激活值保持 FP16 |
+| **W8A8** | Weight 8-bit, Activation 8-bit，权重和激活值都量化，可用 INT8 Tensor Core 加速 |
+| **PTQ（Post-Training Quantization）** | 训练后量化，不需要重新训练，只需少量校准数据 |
+| **GPTQ** | 一种 PTQ 方法，通过误差补偿逐层量化，效果好但速度较慢 |
+| **AWQ** | Activation-aware Weight Quantization，根据激活值幅度保护重要权重，比 GPTQ 更快效果更好 |
+| **SmoothQuant** | 将激活值的“尖峰”转移给权重，让 W8A8 量化变得可行 |
+| **Scale / Zero Point** | 量化参数。Scale 决定量化区间的缩放比例，Zero Point 决定零点的偏移 |
+| **Per-group 量化** | 每 G 个元素共享一个 Scale（如 G=128），比 per-tensor 更精细但开销稍大 |

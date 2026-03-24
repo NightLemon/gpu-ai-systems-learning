@@ -1,6 +1,6 @@
 # GEMM 优化实战
 
-> 矩阵乘法（GEMM）是深度学习的核心计算，也是 GPU 优化的试金石。
+> 矩阵乘法（GEMM，General Matrix Multiply）是深度学习中最核心的计算操作，也是衡量 GPU 优化能力的试金石。全连接层、注意力机制、卷积层的底层计算本质上都是 GEMM。
 
 ## 核心概念
 
@@ -277,3 +277,17 @@ A: FlashAttention 的核心思想就是将 Attention 的多个步骤（$QK^T$、
 - [CUTLASS Documentation](https://github.com/NVIDIA/cutlass/blob/main/media/docs/fundamental_types.md) — NVIDIA CUTLASS
 - [How to Optimize a CUDA Matmul Kernel](https://leimao.github.io/article/CUDA-Matrix-Multiplication-Optimization/) — Lei Mao
 - [Efficient GEMM in CUDA](https://github.com/NVIDIA/cutlass/blob/main/media/docs/efficient_gemm.md) — CUTLASS 官方解释
+
+---
+
+## 术语表
+
+| 术语 | 说明 |
+|------|------|
+| **GEMM** | General Matrix Multiply，$C = A \times B$，深度学习中 70-80% 的计算时间花在 GEMM 上 |
+| **cuBLAS** | NVIDIA 的闭源 BLAS（基础线性代数子程序）库，提供高度优化的 GEMM 实现 |
+| **CUTLASS** | NVIDIA 的开源 C++ 模板库，可以自定义和融合 GEMM kernel |
+| **Register Tiling** | 每个线程计算输出矩阵的一个小块（如 8×8），将中间结果保存在寄存器中，提高计算与访存的比值 |
+| **双缓冲（Double Buffering）** | 用两块 Shared Memory 交替使用：计算当前块的同时预取下一块，隐藏数据加载延迟 |
+| **WMMA** | Warp Matrix Multiply-Accumulate，Tensor Core 的编程接口，以 warp 为单位执行矩阵乘加 |
+| **FLOPs** | Floating Point Operations，浮点运算次数。矩阵乘法 $C_{M \times N} = A_{M \times K} \times B_{K \times N}$ 的 FLOPs = $2MNK$ |

@@ -1,6 +1,6 @@
 # 流水线并行（Pipeline Parallelism）
 
-> 将模型按层切分到不同设备——以 bubble 为代价换取显存节省和跨机扩展能力。
+> 将模型按层切分到不同的设备（或设备组）上。每个设备只负责若干层的计算，数据像流水线一样依次经过各个设备。代价是存在“bubble”（流水线空泡，部分设备空闲等待），但通信量小，适合跨机场景。
 
 ## 核心概念
 
@@ -160,3 +160,17 @@ A: 经验法则：M ≥ 4P（bubble ≤ 20%）。但 M 越大意味着每个 mic
 - [PipeDream](https://arxiv.org/abs/1806.03377) — 异步流水线
 - [Megatron-LM 3D Parallelism](https://arxiv.org/abs/2104.04473) — Narayanan et al., 2021
 - [Zero Bubble Pipeline](https://arxiv.org/abs/2401.10241) — Qi et al., 2024
+
+---
+
+## 术语表
+
+| 术语 | 说明 |
+|------|------|
+| **流水线并行（Pipeline Parallelism, PP）** | 将模型按层切分到多个设备，数据依次流过各个 Stage |
+| **Stage** | 流水线中的一个计算段，通常对应一个设备（或设备组）上的若干连续层 |
+| **Microbatch** | 将一个 mini-batch 拆成多个小块（microbatch），让流水线的各 Stage 能重叠工作，减少空闲 |
+| **Bubble（空泡）** | 流水线中某些 Stage 空闲等待的时间。Bubble 比例 = (P-1)/(P-1+M)，P=Stage 数，M=Microbatch 数 |
+| **GPipe** | Google 提出的流水线并行方案，先做所有 microbatch 的 forward 再做 backward |
+| **1F1B** | One Forward One Backward，交替执行 forward 和 backward，减少激活值缓存压力 |
+| **Interleaved Pipeline** | 每个 Stage 分配不连续的层（虚拟 Stage），进一步减少 Bubble |

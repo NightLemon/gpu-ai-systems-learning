@@ -243,3 +243,15 @@ train_batch_size = micro_batch_per_gpu × num_gpus × gradient_accumulation_step
 - [ZeRO-Offload](https://arxiv.org/abs/2101.06840) — Ren et al., 2021
 - [ZeRO-Infinity](https://arxiv.org/abs/2104.07857) — Rajbhandari et al., 2021
 - [DeepSpeed GitHub](https://github.com/microsoft/DeepSpeed)
+
+---
+
+## 术语表
+
+| 术语 | 说明 |
+|------|------|
+| **DeepSpeed** | 微软开源的深度学习优化库，核心是 ZeRO 系列显存优化 |
+| **ZeRO-Offload** | 将优化器状态和部分计算卸载到 CPU 内存，用 CPU 内存扩展 GPU 显存容量 |
+| **ZeRO-Infinity** | 在 ZeRO-3 基础上，进一步将数据卸载到 NVMe SSD，理论上可训练任意大的模型 |
+| **ds_config.json** | DeepSpeed 的配置文件，通过 JSON 开启各种优化功能，几乎不需要改代码 |
+| **gradient_accumulation_steps** | 梯度累积步数。每累积 N 步的梯度后再做一次参数更新，等效于增大 batch size |

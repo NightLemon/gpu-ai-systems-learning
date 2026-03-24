@@ -119,3 +119,17 @@ A: 支持。vLLM 提供了多种 speculative decoding 后端（独立 draft mode
 - [Fast Inference from Transformers via Speculative Decoding](https://arxiv.org/abs/2211.17192) — Leviathan et al., 2023
 - [Medusa: Simple LLM Inference Acceleration](https://arxiv.org/abs/2401.10774)
 - [Eagle: Speculative Sampling](https://arxiv.org/abs/2401.15077)
+
+---
+
+## 术语表
+
+| 术语 | 说明 |
+|------|------|
+| **Speculative Decoding（投机解码）** | 用小模型快速生成候选 token，大模型一次性并行验证，加速推理 |
+| **Draft Model** | 用于生成候选 token 的小模型（快但不够准） |
+| **Target Model** | 最终判定的大模型（慢但准） |
+| **Rejection Sampling** | 数学上保证输出分布与单独运行 target model 完全一致的采样方法 |
+| **γ (gamma)** | 每轮 draft model 生成的候选 token 数 |
+| **α (alpha)** | 平均单 token 被接受的概率（acceptance rate） |
+| **Medusa** | 一种变体，在模型最后一层加多个预测头，同时预测多个未来 token |

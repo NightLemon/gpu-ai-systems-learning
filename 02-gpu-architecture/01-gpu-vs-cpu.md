@@ -1,6 +1,6 @@
 # GPU vs CPU：设计哲学的根本差异
 
-> CPU 为延迟优化，GPU 为吞吐优化——理解这一点是理解一切 GPU 编程的起点。
+> CPU 为**延迟**（latency）优化——让单个任务尽快完成；GPU 为**吞吐**（throughput）优化——让大量任务同时推进。理解这一根本差异是理解一切 GPU 编程的起点。
 
 ## 核心概念
 
@@ -37,11 +37,11 @@ CPU: 少量强大的核心，复杂控制逻辑          GPU: 大量简单的核
 
 ### 为什么 GPU 适合深度学习？
 
-深度学习的核心计算是**矩阵乘法（GEMM）**，其特点：
+深度学习的核心计算是**矩阵乘法**（GEMM，General Matrix Multiply），它具有三个特点：
 
-1. **高度并行**：矩阵中每个元素的计算相互独立
-2. **计算密集**：算术运算远多于内存访问（高 arithmetic intensity）
-3. **规则的访存模式**：不需要复杂的分支预测和乱序执行
+1. **高度并行**：输出矩阵中每个元素的计算可以独立完成，天然适合大规模并行
+2. **计算密集**：算术运算次数（FLOPs）远多于内存访问量（高算术强度 / arithmetic intensity）
+3. **规则的访存模式**：数据按固定步长读取，不需要复杂的分支预测和乱序执行
 
 这恰好匹配 GPU 的设计：大量简单核心 + 高内存带宽 + 简单控制逻辑。
 
@@ -151,3 +151,24 @@ A: HBM（High Bandwidth Memory）通过 3D 堆叠 + 超宽总线（如 HBM3 的 
 - [NVIDIA CUDA C++ Programming Guide - Introduction](https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#introduction)
 - [Stanford CS149 - Parallel Computing](https://gfxcourses.stanford.edu/cs149/fall24)
 - [Roofline Model 论文](https://www2.eecs.berkeley.edu/Pubs/TechRpts/2008/EECS-2008-134.pdf) — Williams et al., 2009
+
+---
+
+## 术语表
+
+| 术语 | 说明 |
+|------|------|
+| **GPU** | Graphics Processing Unit，图形处理器。原本用于图形渲染，现被广泛用于深度学习等并行计算任务 |
+| **CUDA Core** | NVIDIA GPU 中执行浮点/整数标量运算的基本计算单元，每个时钟周期完成一次 FMA（乘加）操作 |
+| **Tensor Core** | NVIDIA GPU 中专用于矩阵运算的加速单元，单条指令可完成一个小矩阵（如 4×4 或 16×16）的乘加运算，算力远超 CUDA Core |
+| **SM（Streaming Multiprocessor）** | GPU 的基本计算模块，每个 SM 包含多个 CUDA Core、Tensor Core、共享内存等，详见下一节 |
+| **TFLOPS** | Tera Floating Point Operations Per Second，每秒万亿次浮点运算，衡量算力的单位 |
+| **FP32 / FP16 / BF16** | 不同精度的浮点数格式。FP32 = 32 位（标准精度），FP16 = 16 位（半精度），BF16 = 16 位（与 FP32 同范围但精度稍低） |
+| **HBM（High Bandwidth Memory）** | 高带宽显存，通过 3D 芯片堆叠和超宽总线实现极高带宽，用于 A100/H100 等数据中心 GPU |
+| **GDDR** | Graphics DDR，传统显存技术（如 GDDR6X），用于消费级显卡（如 RTX 4090） |
+| **GEMM** | General Matrix Multiply，通用矩阵乘法，深度学习中最核心、最耗时的计算操作 |
+| **FMA** | Fused Multiply-Add，融合乘加运算，一条指令完成 a×b+c，是 GPU 计算的基本操作 |
+| **Arithmetic Intensity（算术强度）** | 每字节内存访问对应的浮点运算次数，用于判断计算是带宽瓶颈还是算力瓶颈 |
+| **Roofline Model（屋顶线模型）** | 将硬件的算力上限和带宽上限画在同一图中，帮助判断 kernel 的性能瓶颈所在 |
+| **Latency Hiding（延迟隐藏）** | GPU 的核心策略：当某组线程等待内存数据时，立即切换到另一组线程执行，用线程切换来"隐藏"等待时间 |
+| **SPMD** | Single Program Multiple Data，所有线程执行同一段程序但处理不同数据，GPU 编程的基本范式 |

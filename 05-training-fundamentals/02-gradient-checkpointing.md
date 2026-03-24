@@ -1,6 +1,6 @@
 # 梯度检查点（Gradient Checkpointing）
 
-> 用 ~30% 的额外计算换取 ~60-70% 的激活值显存节省。
+> 用额外 ~30% 的重复计算（时间）换取 ~60-70% 的激活值显存节省（空间）。在显存不足以缓存所有中间层输出时，可以只保存部分层的结果，其余的在反向传播时重新计算。
 
 ## 核心概念
 
@@ -55,3 +55,13 @@ class Model(nn.Module):
 
 - [Training Deep Nets with Sublinear Memory Cost](https://arxiv.org/abs/1604.06174) — Chen et al., 2016
 - [PyTorch Checkpoint 文档](https://pytorch.org/docs/stable/checkpoint.html)
+
+---
+
+## 术语表
+
+| 术语 | 说明 |
+|------|------|
+| **激活值（Activations）** | 前向传播时每一层的中间输出。反向传播计算梯度时需要用到，因此默认会被缓存在显存中 |
+| **Gradient Checkpointing** | 只保存部分层的激活值，其余层在反向传播时从最近的检查点重新计算，用时间换显存 |
+| **Selective Checkpoint** | Megatron-LM 的策略：只重计算显存大但计算快的操作（如 Attention Score），保留显存小但重算慢的（如 Linear 输出） |

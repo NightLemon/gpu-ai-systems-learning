@@ -1,6 +1,6 @@
 # FlashAttention
 
-> IO-aware 的注意力算法——通过减少 HBM 读写实现 2-4x 加速 + 显存线性下降。
+> 一种 IO-aware（考虑内存读写开销）的 Attention 算法。标准 Attention 会将 N×N 的中间矩阵写入显存（HBM），FlashAttention 通过分块（Tiling）将计算保持在片上高速存储（SRAM）中完成，避免大量 HBM 读写，实现 2-4x 加速 + 显存线性下降。
 
 ## 核心概念
 
@@ -153,3 +153,16 @@ A: FlashDecoding 是针对推理 decode 阶段的优化。标准 decode 时 Q �
 - [FlashAttention v3](https://arxiv.org/abs/2407.08608) — Shah et al., 2024
 - [flash-attn GitHub](https://github.com/Dao-AILab/flash-attention)
 - [FlashDecoding](https://crfm.stanford.edu/2023/10/12/flashdecoding.html)
+
+---
+
+## 术语表
+
+| 术语 | 说明 |
+|------|------|
+| **IO-aware** | 算法设计时显式考虑内存/显存的读写开销，而不仅仅优化计算量 |
+| **Tiling（分块）** | 将大矩阵切成小块，在片上 SRAM 中完成计算，避免将中间结果写回 HBM |
+| **Online Softmax** | 分块递推计算 Softmax 的方法，不需要先算出完整的 N×N 矩阵 |
+| **SRAM** | Static RAM，GPU 片上的高速存储（Shared Memory / L1 Cache），带宽远高于 HBM |
+| **FlashDecoding** | 针对 decode 阶段（Q 只有 1 个 token）的优化，沿 KV 维度并行 |
+| **SDPA** | Scaled Dot-Product Attention，PyTorch 2.0+ 的 `F.scaled_dot_product_attention()` 接口，自动选择最优实现 |

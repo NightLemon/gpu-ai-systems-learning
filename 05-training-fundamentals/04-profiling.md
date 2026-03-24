@@ -1,6 +1,6 @@
 # 性能分析（Profiling）
 
-> 优化之前必须先 Profile——找到真正的瓶颈。
+> 优化之前必须先 Profile——用专用工具采集运行时的性能数据，找到真正的瓶颈在哪（是 GPU 计算不够快？是带宽不够？还是数据加载太慢？）。
 
 ## 核心工具
 
@@ -82,3 +82,16 @@ torch.cuda.max_memory_allocated() / 1e9  # 峰值
 - [PyTorch Profiler Tutorial](https://pytorch.org/tutorials/recipes/recipes/profiler_recipe.html)
 - [Nsight Systems Documentation](https://docs.nvidia.com/nsight-systems/)
 - [Nsight Compute Documentation](https://docs.nvidia.com/nsight-compute/)
+
+---
+
+## 术语表
+
+| 术语 | 说明 |
+|------|------|
+| **Profiling（性能分析）** | 用工具采集程序运行时的耗时、带宽利用率、显存占用等数据，以定位性能瓶颈 |
+| **PyTorch Profiler** | PyTorch 内置的性能分析工具，可以看每个算子的 CPU/CUDA 时间 |
+| **Nsight Systems (nsys)** | NVIDIA 的系统级 Profiler，显示 kernel、memcpy、NCCL 的完整时间线 |
+| **Nsight Compute (ncu)** | NVIDIA 的 kernel 级 Profiler，深入分析单个 kernel 的 roofline、stall 原因、occupancy |
+| **nvidia-smi** | NVIDIA GPU 的命令行监控工具，查看 GPU 利用率、显存、温度、进程等 |
+| **TensorBoard** | 训练可视化工具，PyTorch Profiler 可以将 trace 导出为 TensorBoard 格式查看 |

@@ -94,3 +94,15 @@ FP16 + Prefix Cache   ?ms    ?ms    ? tok/s     ?GB
 - [vLLM Documentation](https://docs.vllm.ai/)
 - [vLLM Benchmarks](https://github.com/vllm-project/vllm/tree/main/benchmarks)
 - [LLM Inference Benchmark](https://github.com/bentoml/llm-bench)
+
+---
+
+## 术语表
+
+| 术语 | 说明 |
+|------|------|
+| **Serving** | 将模型部署为在线服务，接受 HTTP 请求并返回生成结果 |
+| **Throughput** | 系统级吞吐量，衡量单位时间内能处理多少 token |
+| **TTFT** | Time to First Token，用户发消息到看到第一个字的延迟 |
+| **TPOT** | Time per Output Token，生成每个后续 token 的平均时间 |
+| **压测（Benchmarking）** | 用工具模拟高并发请求，测量系统在不同负载下的性能表现 |

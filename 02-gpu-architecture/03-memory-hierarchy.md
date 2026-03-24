@@ -1,6 +1,6 @@
 # GPU 显存层级
 
-> 理解 GPU 的内存层次结构是写出高性能 CUDA kernel 的关键。
+> GPU 内部有多层存储器（从最快的寄存器到最大的 HBM 显存），每层速度和容量不同。理解这个层次结构是写出高性能 CUDA kernel 的关键——大多数优化本质上都是在“减少慢存储的访问，增加快存储的复用”。
 
 ## 核心概念
 
@@ -189,3 +189,19 @@ A: 经验法则：
 - [CUDA C++ Programming Guide - Memory Hierarchy](https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#memory-hierarchy)
 - [NVIDIA GPU Memory Tutorial](https://developer.nvidia.com/blog/how-access-global-memory-efficiently-cuda-c-kernels/)
 - [Understanding GPU Memory Access Patterns](https://developer.nvidia.com/blog/using-shared-memory-cuda-cc/)
+
+---
+
+## 术语表
+
+| 术语 | 说明 |
+|------|------|
+| **Register（寄存器）** | GPU 中每个线程私有的最快存储，由编译器自动分配，容量有限 |
+| **Shared Memory（共享内存）** | SM 内部的高速存储，同一个 Block 内的所有线程可以读写，通常用于手动缓存和线程间通信 |
+| **L1/L2 Cache** | 硬件自动管理的缓存。L1 在 SM 内部（与 Shared Memory 共享同一块 SRAM），L2 全局共享 |
+| **HBM / Global Memory** | GPU 的主显存（如 H100 的 80 GB HBM3）。容量最大但访问最慢，所有线程可见 |
+| **SRAM** | Static RAM，静态随机存取存储器。速度快但单位成本高，GPU 内的 Shared Memory 和 Cache 都用 SRAM 实现 |
+| **Coalesced Access（合并访存）** | 同一个 warp 中的 32 个线程同时访问连续的内存地址，硬件可以合并为一次内存事务，效率最高 |
+| **Bank Conflict（Bank 冲突）** | Shared Memory 分为 32 个 Bank，当同一 warp 中多个线程同时访问同一 Bank 的不同地址时，访问会被串行化 |
+| **Constant Memory** | 64KB 的只读内存，有专用 Cache，适合存放所有线程都读取的相同参数 |
+| **`__syncthreads()`** | CUDA 中的 Block 级别同步原语，确保 Block 内所有线程都执行到这一点后才继续 |

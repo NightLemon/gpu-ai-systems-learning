@@ -97,3 +97,14 @@ printf("Performance: %.1f GFLOPS (%.1f%% of cuBLAS)\n", gflops, gflops/cublas_gf
 - [Simon Boehm: How to Optimize a CUDA Matmul Kernel](https://siboehm.com/articles/22/CUDA-MMM) — **必读**，从V0到V5的完整优化过程
 - [Lei Mao: CUDA Matrix Multiplication Optimization](https://leimao.github.io/article/CUDA-Matrix-Multiplication-Optimization/)
 - [CUTLASS GEMM Documentation](https://github.com/NVIDIA/cutlass/blob/main/media/docs/efficient_gemm.md)
+
+---
+
+## 术语表
+
+| 术语 | 说明 |
+|------|------|
+| **SGEMM** | Single-precision (FP32) General Matrix Multiply，FP32 矩阵乘法 |
+| **cuBLAS** | NVIDIA 的闭源 BLAS 库，提供高度优化的矩阵运算实现，是性能基准线 |
+| **`cudaEventElapsedTime`** | 用 CUDA Event 精确测量 GPU kernel 耗时的 API |
+| **GFLOPS** | Giga Floating Point Operations Per Second，每秒十亿次浮点运算 |

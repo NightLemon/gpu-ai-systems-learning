@@ -1,6 +1,6 @@
 # 计算与显存分析
 
-> 能精确计算一个模型的 FLOPs 和显存占用——这是系统优化工程师的基本功。
+> 能精确计算一个模型的 FLOPs（浮点运算量）和显存占用——这是 GPU 系统优化工程师的基本功。知道计算量和显存占用后，你才能判断一个模型需要多少张卡、用什么并行策略。
 
 ## 核心概念
 
@@ -112,3 +112,16 @@ A: 主要是优化器状态（FP32 参数副本 + 两个动量 = 12P bytes）和
 
 - [Scaling Laws for Neural Language Models](https://arxiv.org/abs/2001.08361) — Kaplan et al., 2020
 - [Training Compute-Optimal Large Language Models (Chinchilla)](https://arxiv.org/abs/2203.15556) — Hoffmann et al., 2022
+
+---
+
+## 术语表
+
+| 术语 | 说明 |
+|------|------|
+| **FLOPs** | Floating Point Operations，浮点运算次数。单次 forward 约 2P FLOPs，forward+backward 约 6P FLOPs（P = 参数量） |
+| **激活值（Activations）** | 前向传播的中间结果（每层的输出），反向传播时需要用到，因此训练时需要缓存在显存中 |
+| **优化器状态** | Adam/AdamW 优化器维护的额外变量（FP32 参数副本 + momentum + variance），每个参数占 12 字节 |
+| **SwiGLU** | 一种 FFN 激活函数，用 SiLU 的门控机制替代标准 GeLU，效果更好但参数量略多 |
+| **RMSNorm** | Root Mean Square Layer Normalization，比标准 LayerNorm 更快（省去了均值计算） |
+| **Scaling Law** | 模型性能与参数量/数据量/计算量之间的幂律关系，用于预测扩大模型的收益 |

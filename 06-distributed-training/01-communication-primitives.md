@@ -1,6 +1,6 @@
 # 通信原语
 
-> AllReduce、AllGather、ReduceScatter——分布式训练的通信基石。
+> AllReduce、AllGather、ReduceScatter——这些是分布式训练中 GPU 之间交换数据的基础操作（称为“集合通信”）。理解它们的语义和实现算法是掌握分布式训练的前提。
 
 ## 核心概念
 
@@ -230,3 +230,19 @@ A: 用 PyTorch Profiler 或 Nsight Systems 看时间线：如果 GPU 在等待�
 - [NCCL Documentation](https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/)
 - [Bringing HPC Techniques to Deep Learning](https://andrew.gibiansky.com/blog/machine-learning/baidu-allreduce/) — Ring AllReduce 经典文章
 - [PyTorch Distributed Overview](https://pytorch.org/tutorials/beginner/dist_overview.html)
+
+---
+
+## 术语表
+
+| 术语 | 说明 |
+|------|------|
+| **集合通信（Collective Communication）** | 多个进程（GPU）协作完成的数据交换操作的统称 |
+| **AllReduce** | 每个 GPU 贡献自己的数据，全局聚合（如求和）后，每个 GPU 都收到相同的结果 |
+| **AllGather** | 每个 GPU 将自己的数据广播给所有其他 GPU，最终每个 GPU 都持有全部数据 |
+| **ReduceScatter** | 全局聚合后，结果被切分并分散到各 GPU（每个 GPU 只拿到结果的 1/N） |
+| **All-to-All** | 每个 GPU 向每个其他 GPU 发送不同的数据块，类似矩阵转置。MoE 中用于 token 分发 |
+| **Ring AllReduce** | 一种经典的 AllReduce 实现算法，N 个 GPU 排成环形传递数据，通信量与 GPU 数量几乎无关 |
+| **NCCL** | NVIDIA Collective Communications Library，NVIDIA 的 GPU 集合通信库，自动选择最优通信算法和路径 |
+| **Rank** | 分布式训练中每个参与进程的唯一编号，通常一个 rank 对应一张 GPU |
+| **World Size** | 参与训练的总进程（GPU）数 |

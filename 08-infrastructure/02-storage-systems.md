@@ -182,3 +182,17 @@ A: 严格来说需要，否则同一 epoch 内会重复或漏掉部分数据。�
 - [PyTorch Distributed Checkpoint](https://pytorch.org/docs/stable/distributed.checkpoint.html)
 - [Mosaic StreamingDataset](https://github.com/mosaicml/streaming)
 - [CheckFreq: Frequent, Fine-Grained DNN Checkpointing](https://www.usenix.org/conference/fast21/presentation/mohan) — 异步 checkpoint 的研究
+
+---
+
+## 术语表
+
+| 术语 | 说明 |
+|------|------|
+| **Checkpoint** | 训练过程中定期保存的模型状态快照（参数 + 优化器状态 + 训练进度），用于故障恢复 |
+| **Sharded Checkpoint** | 每个 rank 只保存自己的那一份 shard，并行写入，速度快但恢复时需要相同的并行配置 |
+| **Async Checkpoint** | 异步保存：先将状态拷到 CPU（快），然后后台线程写入存储（慢但不阻塞训练） |
+| **Lustre** | 高吞吐并行文件系统，HPC 集群的标配存储 |
+| **GPFS (Spectrum Scale)** | IBM 的企业级并行文件系统 |
+| **对象存储 (S3/GCS)** | 无限容量的云存储，延迟较高，适合数据集归档但不适合直接训练读取 |
+| **NVMe** | Non-Volatile Memory Express，高速 SSD 的接口协议，本地 NVMe 常用作数据缓存层 |

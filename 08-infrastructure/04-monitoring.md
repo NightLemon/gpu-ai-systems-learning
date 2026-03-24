@@ -207,3 +207,17 @@ A: 记录每个 rank 的 step time。如果某些 rank 始终比其他慢 >20%�
 - [Nsight Systems User Guide](https://docs.nvidia.com/nsight-systems/)
 - [PyTorch Profiler Tutorial](https://pytorch.org/tutorials/recipes/recipes/profiler_recipe.html)
 - [Weights & Biases](https://wandb.ai/) — 训练实验跟踪
+
+---
+
+## 术语表
+
+| 术语 | 说明 |
+|------|------|
+| **DCGM** | Data Center GPU Manager，NVIDIA 的 GPU 集群监控工具，采集利用率、温度、功耗、错误等指标 |
+| **dcgm-exporter** | 将 DCGM 指标导出为 Prometheus 格式的组件，通常作为 DaemonSet 部署在每个节点 |
+| **MFU** | Model FLOPs Utilization = 实际 FLOPS / 理论峰值 FLOPS。衡量训练效率的核心指标 |
+| **XID Error** | NVIDIA GPU 的硬件/驱动错误代码。不同 XID 对应不同类型的故障（如显存错误、GPU 掉线） |
+| **Straggler** | 训练集群中持续比其他 GPU 慢的某个 GPU/节点，拖慢整体训练速度 |
+| **Prometheus + Grafana** | 开源监控栈。Prometheus 采集和存储时序指标，Grafana 做可视化展示 |
+| **W&B (Weights & Biases)** | 训练实验跟踪平台，记录 loss、学习率、GPU 指标等 |

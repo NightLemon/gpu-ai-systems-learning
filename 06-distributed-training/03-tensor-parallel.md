@@ -1,6 +1,6 @@
 # 张量并行（Tensor Parallelism）
 
-> 将单个层的计算切分到多张卡上——适合机内高带宽互联场景。
+> 将单个层的矩阵运算切分到多张卡上并行计算。当模型的单层参数就超过单卡显存时，必须使用张量并行。由于每层都需要通信，它要求卡之间有很高的互联带宽（如 NVLink），因此通常只在同一台机器内使用。
 
 ## 核心概念
 
@@ -200,3 +200,16 @@ A: 因为 TP 把 head 均匀分配到各卡。如果不能整除（如 6 heads, 
 - [Megatron-LM 论文](https://arxiv.org/abs/1909.08053) — Shoeybi et al., 2020
 - [Megatron-LM v2: Sequence Parallelism](https://arxiv.org/abs/2205.05198) — Korthikanti et al., 2022
 - [Megatron-LM GitHub](https://github.com/NVIDIA/Megatron-LM)
+
+---
+
+## 术语表
+
+| 术语 | 说明 |
+|------|------|
+| **张量并行（Tensor Parallelism, TP）** | 将单层的矩阵按列或按行切分到多张卡上并行计算 |
+| **列切分（Column Parallel）** | 将权重矩阵按列切分，每张卡计算输出的一部分 |
+| **行切分（Row Parallel）** | 将权重矩阵按行切分，各卡的输出需要 AllReduce 合并 |
+| **$f$ 和 $\bar{f}$** | Megatron 论文中的符号。$f$: forward 时不通信，backward 时 AllReduce；$\bar{f}$: 反过来 |
+| **序列并行（Sequence Parallelism）** | 将非 TP 区域的操作（LayerNorm、Dropout）也沿序列维度切分，进一步节省显存 |
+| **TP Degree** | 张量并行的度，即参与切分的 GPU 数。通常 = 机内 GPU 数（如 8） |

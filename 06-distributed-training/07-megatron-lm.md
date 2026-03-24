@@ -209,3 +209,15 @@ A: 公开信息有限，但推测：
 - [Efficient Large-Scale Language Model Training (3D Parallelism)](https://arxiv.org/abs/2104.04473) — Narayanan et al., 2021
 - [Reducing Activation Recomputation in Large Transformer Models](https://arxiv.org/abs/2205.05198) — Korthikanti et al., 2022
 - [Megatron-LM GitHub](https://github.com/NVIDIA/Megatron-LM)
+
+---
+
+## 术语表
+
+| 术语 | 说明 |
+|------|------|
+| **Megatron-LM** | NVIDIA 的大模型训练框架，首创并整合了 3D 并行（TP + PP + DP） |
+| **3D 并行** | 同时使用张量并行 (TP)、流水线并行 (PP)、数据并行 (DP) 三种策略 |
+| **MFU** | Model FLOPs Utilization，实际达到的 FLOPS / GPU 峰值 FLOPS，衡量训练效率的核心指标 |
+| **Selective Activation Recomputation** | 只重计算显存费但计算便宜的层，留下显存小但重算贵的层 |
+| **分布式优化器** | Megatron-LM 将优化器状态切分到 DP 组内各卡，类似 ZeRO-1 |

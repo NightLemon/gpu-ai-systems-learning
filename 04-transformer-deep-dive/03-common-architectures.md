@@ -1,6 +1,6 @@
 # 常见 LLM 架构
 
-> GPT、LLaMA、Mistral——了解主流模型的关键设计选择。
+> GPT、LLaMA、Mistral、DeepSeek——了解当前主流大语言模型的关键设计差异。这些模型都是基于 Transformer 的 Decoder-only 架构（只用解码器，自回归生成），但在 Attention 变体、FFN 结构、位置编码等细节上有重要差异。
 
 ## 架构对比
 
@@ -77,3 +77,17 @@ class RMSNorm(nn.Module):
 - [LLaMA 2](https://arxiv.org/abs/2307.09288) — Touvron et al., 2023
 - [Mistral 7B](https://arxiv.org/abs/2310.06825) — Jiang et al., 2023
 - [DeepSeek-V2](https://arxiv.org/abs/2405.04434) — DeepSeek, 2024
+
+---
+
+## 术语表
+
+| 术语 | 说明 |
+|------|------|
+| **Decoder-only** | Transformer 的一种变体，只用解码器（带 causal mask），每个 token 只能看到它前面的 token。GPT/LLaMA/Mistral 都是此类 |
+| **Pre-Norm vs Post-Norm** | LayerNorm 放在 Attention/FFN 之前（Pre-Norm）还是之后（Post-Norm）。Pre-Norm 训练更稳定，是当前主流 |
+| **SwiGLU** | Swish-Gated Linear Unit，一种 FFN 激活函数，用 SiLU 门控机制替代 GeLU，效果更好 |
+| **RMSNorm** | Root Mean Square Normalization，省略均值计算的简化版 LayerNorm，更快且效果相当 |
+| **Sliding Window Attention** | Mistral 引入，每个 token 只关注前面固定窗口内的 token，降低长序列的计算和显存开销 |
+| **MLA** | Multi-head Latent Attention，DeepSeek-V2 提出，将 KV 投影到低秩空间压缩 KV-Cache |
+| **MoE** | Mixture of Experts，混合专家模型。每个 token 只激活部分 FFN（专家），总参数大但计算量可控 |

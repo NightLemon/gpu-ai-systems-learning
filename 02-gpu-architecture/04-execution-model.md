@@ -1,10 +1,12 @@
 # GPU 执行模型
 
-> Grid → Block → Warp → Thread：理解 GPU 的线程层级结构和调度机制。
+> CUDA 程序的线程按 Grid → Block → Warp → Thread 四层结构组织。理解这个层级和硬件调度机制，是写出高效 kernel 的前提。
 
 ## 核心概念
 
 ### 线程层级结构
+
+当你用 `kernel<<<gridDim, blockDim>>>()` 启动一个 CUDA kernel 时，GPU 会创建如下层级的线程结构：
 
 ```
 ┌─────────────────────────── Grid ──────────────────────────────┐
@@ -209,3 +211,20 @@ A: CUDA 9.0 引入的 API，允许更灵活的线程分组和同步，包括 war
 - [CUDA C++ Programming Guide - Thread Hierarchy](https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#thread-hierarchy)
 - [CUDA Occupancy Calculator](https://docs.nvidia.com/cuda/cuda-occupancy-calculator/) — 在线工具
 - [Life of a CUDA Kernel](https://developer.nvidia.com/blog/cuda-refresher-cuda-programming-model/) — NVIDIA Blog
+
+---
+
+## 术语表
+
+| 术语 | 说明 |
+|------|------|
+| **Grid** | 一次 kernel 启动创建的所有 Block 的集合，是最外层的线程组织单元 |
+| **Block（线程块）** | 一组线程的集合（最多 1024 个），同一 Block 内的线程可以共享 Shared Memory 并同步 |
+| **Warp** | 32 个连续线程的执行组，是 GPU 实际调度和执行的最小单位。同一 warp 的 32 个线程同步执行同一条指令 |
+| **Thread（线程）** | 最小的逻辑执行单元，每个线程有自己的寄存器和程序计数器 |
+| **Warp Divergence（分支发散）** | 同一 warp 中的线程走了不同的 if/else 分支，硬件必须串行执行两个分支，导致性能下降 |
+| **Occupancy（占用率）** | SM 上实际驻留的 warp 数 / SM 支持的最大 warp 数。越高意味着有更多 warp 可以切换以隐藏延迟 |
+| **Warp Scheduler** | SM 内部的硬件模块，负责从多个就绪的 warp 中选择一个发射指令执行 |
+| **Latency Hiding（延迟隐藏）** | 当一个 warp 等待内存数据时，Warp Scheduler 立即切换到另一个就绪的 warp 执行，从而“隐藏”等待时间 |
+| **`__launch_bounds__`** | CUDA 修饰符，告诉编译器每个 Block 的最大线程数和最少驻留 Block 数，帮助编译器优化寄存器分配 |
+| **Cooperative Groups** | CUDA 9.0 引入的 API，提供比 `__syncthreads()` 更灵活的线程分组和同步机制 |

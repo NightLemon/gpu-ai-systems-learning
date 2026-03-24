@@ -205,3 +205,16 @@ A: 支持。vLLM 0.4+ 支持 LLaVA 等视觉语言模型，处理图片输入的
 - [vLLM 论文: Efficient Memory Management for LLM Serving with PagedAttention](https://arxiv.org/abs/2309.06180) — Kwon et al., 2023
 - [vLLM GitHub](https://github.com/vllm-project/vllm)
 - [vLLM 文档](https://docs.vllm.ai/)
+
+---
+
+## 术语表
+
+| 术语 | 说明 |
+|------|------|
+| **vLLM** | 当前最流行的开源 LLM 推理引擎，核心创新是 PagedAttention |
+| **PagedAttention** | 借鉴 OS 虚拟内存的分页机制管理 KV-Cache，按固定大小的 Block 按需分配，消除显存碎片 |
+| **Block Table（页表）** | 记录每个请求的 KV-Cache 分布在哪些物理 Block 上的映射表 |
+| **Prefix Caching** | 多个请求共享相同的 prompt 前缀时，复用其 KV-Cache Block，避免重复计算 |
+| **Preemption（抢占）** | 显存不足时，将低优先级请求的 KV-Cache 换出到 CPU，释放显存给高优先级请求 |
+| **`gpu-memory-utilization`** | vLLM 配置参数，控制允许 vLLM 使用的 GPU 显存比例（默认 0.9 = 90%） |

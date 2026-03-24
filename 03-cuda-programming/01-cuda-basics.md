@@ -1,6 +1,6 @@
 # CUDA 编程基础
 
-> 第一个 CUDA 程序：理解 Host/Device 模型、kernel 编写与启动。
+> 第一个 CUDA 程序：理解 Host/Device 模型、kernel 编写与启动。CUDA（Compute Unified Device Architecture）是 NVIDIA 提供的 GPU 编程框架，允许你用类 C++ 的语法编写运行在 GPU 上的并行程序。
 
 ## 核心概念
 
@@ -192,3 +192,20 @@ A: `__syncthreads()` 同步整个 Block 的所有线程（barrier），`__syncwa
 - [CUDA C++ Programming Guide](https://docs.nvidia.com/cuda/cuda-c-programming-guide/) — 官方文档，必读
 - [CUDA Samples](https://github.com/NVIDIA/cuda-samples) — 官方示例代码
 - [An Even Easier Introduction to CUDA](https://developer.nvidia.com/blog/even-easier-introduction-cuda/) — NVIDIA 入门博客
+
+---
+
+## 术语表
+
+| 术语 | 说明 |
+|------|------|
+| **Host** | 指 CPU 及其内存（系统内存），负责程序的主流程、数据准备和 kernel 启动 |
+| **Device** | 指 GPU 及其显存，负责执行并行计算 |
+| **Kernel** | 用 `__global__` 修饰的函数，由 Host 启动、在 Device 上并行执行 |
+| **`__global__`** | CUDA 函数修饰符，表示这个函数是一个 kernel，由 CPU 调用、在 GPU 上执行 |
+| **`__device__`** | CUDA 函数修饰符，表示只能在 GPU 上调用的函数 |
+| **`cudaMalloc` / `cudaFree`** | 在 GPU 显存上分配/释放内存 |
+| **`cudaMemcpy`** | 在 CPU 内存和 GPU 显存之间拷贝数据 |
+| **`<<<gridDim, blockDim>>>`** | kernel 启动语法，指定 Grid 中有多少个 Block、每个 Block 有多少个线程 |
+| **`threadIdx` / `blockIdx`** | CUDA 内置变量，用于获取当前线程在 Block 内 / Block 在 Grid 内的索引 |
+| **`cudaDeviceSynchronize()`** | 阻塞 CPU 直到 GPU 上所有先前提交的工作完成（GPU 操作是异步的，不 sync 就测不准时间） |

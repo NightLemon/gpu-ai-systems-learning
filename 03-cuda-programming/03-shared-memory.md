@@ -1,6 +1,6 @@
 # Shared Memory 详解
 
-> Shared Memory 是 CUDA 优化的核心工具——用好它可以获得数量级的性能提升。
+> Shared Memory（共享内存）是 GPU SM 内部的高速存储，同一个 Block 内的所有线程都可以读写。它是 CUDA 优化的核心工具——用它作为手动管理的缓存，可以将对慢速 Global Memory（显存）的访问减少到最低限度。
 
 ## 核心概念
 
@@ -240,3 +240,18 @@ A: PyTorch 的 C++ extension 中可以直接写 CUDA kernel，使用 shared memo
 - [Using Shared Memory in CUDA C/C++](https://developer.nvidia.com/blog/using-shared-memory-cuda-cc/) — NVIDIA Blog
 - [Matrix Multiplication with Shared Memory](https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#shared-memory)
 - [Bank Conflicts 详解](https://developer.nvidia.com/blog/efficient-matrix-transpose-cuda-cc/)
+
+---
+
+## 术语表
+
+| 术语 | 说明 |
+|------|------|
+| **Shared Memory** | SM 内部的高速 SRAM 存储，同一 Block 内的线程共享。需要程序员显式管理（分配/读写/同步） |
+| **Tiling（分块）** | 将大矩阵切成小块（Tile），每次将一个 Tile 加载到 Shared Memory 中复用，减少 Global Memory 访问 |
+| **Bank** | Shared Memory 被划分为 32 个 Bank，每个 Bank 宽 4 bytes。同一时刻不同线程访问不同 Bank 可以并行 |
+| **Bank Conflict** | 同一 warp 中多个线程同时访问同一 Bank 的不同地址，访问会被串行化，严重时性能降至 1/32 |
+| **Padding** | 在数组声明时多加一列（如 `tile[32][33]` 而非 `tile[32][32]`），使列方向访问分散到不同 Bank，避免 Bank Conflict |
+| **`__shared__`** | CUDA 内存空间修饰符，声明变量位于 Shared Memory 中 |
+| **`__syncthreads()`** | Block 内同步屏障，确保 Block 内所有线程都执行到此处后才继续，用于线程间数据交换前后 |
+| **Reduction（归约）** | 将多个值合并为一个结果的操作，如求和、求最大值。树形归约是 GPU 上的经典并行算法 |

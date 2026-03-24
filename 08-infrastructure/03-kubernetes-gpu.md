@@ -196,3 +196,20 @@ A: Kueue 是 K8s SIG 官方项目，更轻量且与 K8s 生态集成更好。Vol
 - [Volcano](https://volcano.sh/) — GPU Gang Scheduling
 - [Kueue](https://kueue.sigs.k8s.io/) — K8s 原生作业队列
 - [Slurm + GPU](https://slurm.schedmd.com/gres.html) — Slurm GPU 调度
+
+---
+
+## 术语表
+
+| 术语 | 说明 |
+|------|------|
+| **Kubernetes (K8s)** | 当前最主流的容器编排平台，管理容器化应用的部署、扩缩容和调度 |
+| **GPU Operator** | NVIDIA 提供的 K8s Operator，自动管理 GPU 驱动、Device Plugin、监控等组件 |
+| **Device Plugin** | K8s 插件，让调度器能发现和分配 GPU 资源（`nvidia.com/gpu`） |
+| **Gang Scheduling** | 一组 Pod 要么全部成功调度，要么一个都不调度。分布式训练必须，防止资源死锁 |
+| **Topology-aware Scheduling** | 考虑 GPU 的物理互联拓扑（NVLink、NUMA）来分配 GPU，避免分配到不同 NVLink 域的卡 |
+| **Volcano** | 专为 HPC/AI 场景设计的 K8s 调度器，支持 Gang Scheduling |
+| **Kueue** | K8s SIG 官方的作业队列管理器，更轻量 |
+| **Slurm** | 传统 HPC 集群的作业调度器，原生支持 GPU 和拓扑感知 |
+| **MIG** | Multi-Instance GPU，将一张 GPU 切分为多个独立实例，适合推理场景多模型共享一张卡 |
+| **hostNetwork** | K8s Pod 直接使用宿主机网络（而非虚拟网络），NNCL/RDMA 训练通常需要 |

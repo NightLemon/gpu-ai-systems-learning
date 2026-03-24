@@ -251,3 +251,16 @@ A: PyTorch 原生生态建议 FSDP（更好的 PyTorch 集成、`torch.compile` 
 - [ZeRO 论文](https://arxiv.org/abs/1910.02054) — Rajbhandari et al., 2020
 - [PyTorch FSDP Tutorial](https://pytorch.org/tutorials/intermediate/FSDP_tutorial.html)
 - [Getting Started with DDP](https://pytorch.org/tutorials/intermediate/ddp_tutorial.html)
+
+---
+
+## 术语表
+
+| 术语 | 说明 |
+|------|------|
+| **数据并行（Data Parallelism）** | 每张卡持有完整的模型副本，输入数据被切分到各卡并行计算，梯度通过 AllReduce 同步 |
+| **DDP** | DistributedDataParallel，PyTorch 官方的多进程数据并行实现，用 AllReduce 同步梯度 |
+| **FSDP** | Fully Sharded Data Parallel，PyTorch 官方的 ZeRO-3 实现，将参数/梯度/优化器状态切分到各卡 |
+| **ZeRO** | Zero Redundancy Optimizer，通过切分优化器状态(Stage 1)、梯度(Stage 2)、参数(Stage 3) 来节省显存 |
+| **Gradient Bucketing** | DDP 将参数梯度分组，每组满了就立即启动 AllReduce，与后续反向传播重叠执行 |
+| **$\Phi$** | 本文中表示“参数量 × 每参数字节数”，即模型参数的总字节数 |

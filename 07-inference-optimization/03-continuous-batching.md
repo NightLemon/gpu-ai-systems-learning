@@ -1,6 +1,6 @@
 # Continuous Batching
 
-> 将推理请求从"按 batch 调度"升级为"按 iteration 调度"——吞吐量提升数倍。
+> 将 LLM 推理服务的请求调度从“按 batch 调度”升级为“按 iteration 调度”。传统方式是凑齐一个 batch、等所有请求结束后才处理下一批；Continuous Batching 允许每一次 decode 迭代都可以加入新请求或移除已完成的请求，从而大幅提升系统吞吐。
 
 ## 核心概念
 
@@ -107,3 +107,16 @@ A: vLLM、TensorRT-LLM、TGI (HuggingFace)、Triton Inference Server 都支持�
 - [Orca: A Distributed Serving System for Transformer-Based LLMs](https://www.usenix.org/conference/osdi22/presentation/yu) — 首次提出 iteration-level scheduling
 - [Splitwise: Efficient Generative LLM Inference](https://arxiv.org/abs/2311.18677)
 - [DistServe: Disaggregating Prefill and Decoding](https://arxiv.org/abs/2401.09670)
+
+---
+
+## 术语表
+
+| 术语 | 说明 |
+|------|------|
+| **Static Batching** | 传统方式：凑齐一个 batch，等最长的请求完成后才处理下一批。短请求空等 |
+| **Continuous Batching** | 每次 decode 迭代都可以加入/移除请求，GPU 始终在做有用工作 |
+| **Iteration-level Scheduling** | Continuous Batching 的另一个名称，强调调度粒度是每次 decode 迭代 |
+| **Chunked Prefill** | 将长 prompt 分成小块，与 decode 交替执行，避免 prefill 霍占 GPU |
+| **TTFT** | Time to First Token，从收到请求到输出第一个 token 的延迟 |
+| **TPOT** | Time per Output Token，生成每个 token 的平均时间 |

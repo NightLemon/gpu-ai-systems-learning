@@ -1,6 +1,6 @@
 # 数据加载优化
 
-> 数据加载是训练流水线中容易被忽视的瓶颈。
+> 数据加载是训练流水线中容易被忽视的瓶颈。如果 GPU 在等数据，那再快的卡也发挥不出来。本节讲解如何优化 PyTorch DataLoader、选择合适的数据格式和诊断数据加载瓶颈。
 
 ## 核心概念
 
@@ -68,3 +68,16 @@ with torch.profiler.profile(
 - [PyTorch DataLoader 文档](https://pytorch.org/docs/stable/data.html)
 - [Mosaic StreamingDataset](https://github.com/mosaicml/streaming)
 - [WebDataset](https://github.com/webdataset/webdataset)
+
+---
+
+## 术语表
+
+| 术语 | 说明 |
+|------|------|
+| **DataLoader** | PyTorch 中负责从数据集读取数据并组装成 batch 的组件 |
+| **num_workers** | DataLoader 使用的 CPU 子进程数，负责并行读取和预处理数据 |
+| **pin_memory** | 将数据放入页锁定内存，CPU→GPU 传输时可以用 DMA 直接拷贝，速度更快 |
+| **prefetch_factor** | 每个 worker 预先加载的 batch 数，减少 GPU 等待数据的空闲时间 |
+| **DistributedSampler** | 多卡训练时的数据采样器，确保每张卡拿到不同的数据子集 |
+| **StreamingDataset** | 流式数据加载，不需要将全部数据下载到本地，边读边训，适合 TB 级数据集 |

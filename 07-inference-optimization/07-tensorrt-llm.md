@@ -226,3 +226,16 @@ A: SGLang 是另一个高性能推理框架，定位类似 vLLM。它的特色�
 - [TensorRT-LLM Documentation](https://nvidia.github.io/TensorRT-LLM/)
 - [NVIDIA Triton Inference Server](https://github.com/triton-inference-server/server)
 - [SGLang](https://github.com/sgl-project/sglang)
+
+---
+
+## 术语表
+
+| 术语 | 说明 |
+|------|------|
+| **TensorRT** | NVIDIA 的深度学习推理优化器/编译器，将模型编译为 GPU 特定的高效执行引擎 |
+| **TensorRT-LLM** | TensorRT + LLM 特定优化（KV-Cache、Attention kernel、量化等）的组合 |
+| **Build Engine** | 将模型编译为 TensorRT 引擎的离线步骤，需要指定 max_batch_size、max_seq_len 等 |
+| **Kernel Fusion（算子融合）** | 将多个小操作合并为一个 GPU kernel，减少 kernel 启动开销和显存读写 |
+| **Triton Inference Server** | NVIDIA 的模型服务器，提供 HTTP/gRPC API、请求调度、多模型管理等 |
+| **In-flight Batching** | TensorRT-LLM 对 Continuous Batching 的叫法 |

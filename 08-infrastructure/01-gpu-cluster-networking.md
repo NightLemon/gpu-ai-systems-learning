@@ -184,3 +184,19 @@ A: 单张 IB NDR 网卡 400Gbps (~50 GB/s)，但 8×H100 的跨机通信需求�
 - [NCCL Environment Variables](https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/env.html)
 - [nccl-tests](https://github.com/NVIDIA/nccl-tests) — 通信性能测试工具
 - [RoCE Configuration Best Practices](https://enterprise-support.nvidia.com/s/article/roce-configuration-for-linux)
+
+---
+
+## 术语表
+
+| 术语 | 说明 |
+|------|------|
+| **RDMA** | Remote Direct Memory Access，允许网卡绕过 CPU 和 OS 内核，直接读写远端内存，延迟极低 |
+| **InfiniBand (IB)** | 专用高速网络协议，原生支持 RDMA，是大规模 AI 训练集群的首选 |
+| **RoCE** | RDMA over Converged Ethernet，在标准以太网上实现 RDMA，成本较低但需要精心配置 |
+| **PFC** | Priority Flow Control，以太网上的流控机制，防止丢包。配置不当会导致 PFC Storm |
+| **ECN** | Explicit Congestion Notification，拥塞通知机制，让发送方感知网络拥塞并主动降速 |
+| **GPUDirect RDMA** | GPU 显存直接通过网卡读写远端 GPU 显存，完全绕过 CPU |
+| **Oversubscription** | 网络上行/下行带宽不对等的比例。2:1 表示下行带宽是上行的 2 倍，跨机架带宽可能不足 |
+| **Fat-tree** | 常见的数据中心网络拓扑，由 Leaf、Spine、Core 三层交换机组成 |
+| **Multi-rail** | 一台机器配备多张网卡，每张 GPU 绑定一张网卡，实现带宽叠加 |

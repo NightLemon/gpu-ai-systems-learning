@@ -1,6 +1,6 @@
 # KV-Cache
 
-> 自回归生成的核心缓存机制——不理解 KV-Cache 就不理解 LLM 推理。
+> KV-Cache 是大语言模型自回归生成（逐 token 输出）时的核心缓存机制。它缓存已生成 token 的 Key 和 Value 向量，避免每一步都重新计算。不理解 KV-Cache 就无法理解 LLM 推理的显存和性能特性。
 
 ## 核心概念
 
@@ -165,3 +165,16 @@ A: DeepSeek-V2 提出的 MLA 通过将 KV 投影到低秩空间来压缩 KV-Cach
 - [GQA: Training Generalized Multi-Query Transformer](https://arxiv.org/abs/2305.13245) — Ainslie et al., 2023
 - [Efficient Memory Management for LLM Serving](https://arxiv.org/abs/2309.06180) — vLLM 论文
 - [DeepSeek-V2: MLA](https://arxiv.org/abs/2405.04434) — DeepSeek 2024
+
+---
+
+## 术语表
+
+| 术语 | 说明 |
+|------|------|
+| **KV-Cache** | 缓存已生成 token 的 Key 和 Value 向量，让后续 token 不需重新计算历史 KV，将 Attention 复杂度从 O(N²) 降到 O(N) |
+| **自回归生成（Autoregressive Generation）** | 每次只生成一个 token，将它追加到输入中再生成下一个，重复直到完成 |
+| **Prefill 阶段** | 处理完整 prompt 的阶段，并行计算所有 token 的 KV。Compute-bound |
+| **Decode 阶段** | 逐 token 生成阶段，每次只产出 1 个 token。需读取全量模型权重，Memory-bound |
+| **GQA** | Grouped Query Attention，多个 Q 头共享一组 KV 头，减少 KV-Cache 大小 |
+| **MLA** | Multi-head Latent Attention，DeepSeek-V2 提出的 KV 压缩方案 |

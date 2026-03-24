@@ -1,12 +1,12 @@
 # NVIDIA GPU 架构演进
 
-> 从 Volta 到 Blackwell，理解每一代架构的核心改进及其对 AI 工作负载的影响。
+> 从 Volta 到 Blackwell，理解每一代 NVIDIA GPU 架构的核心改进及其对 AI 工作负载的影响。
 
 ## 核心概念
 
-### Streaming Multiprocessor（SM）— GPU 的基本计算单元
+### Streaming Multiprocessor（SM，流式多处理器）— GPU 的基本计算单元
 
-SM 是 GPU 的核心构建模块。一个 GPU 由数十到上百个 SM 组成，每个 SM 包含：
+SM 是构成 GPU 的核心模块。可以把 GPU 理解为由数十到上百个 SM 组装而成的"计算工厂"，每个 SM 是一个独立的"车间"，内部包含：
 
 ```
 ┌──────────────────── SM (Streaming Multiprocessor) ────────────────────┐
@@ -171,3 +171,21 @@ A: 能，但有限制：
 - [NVIDIA Blackwell Architecture](https://www.nvidia.com/en-us/data-center/technologies/blackwell-architecture/) — B200 架构介绍
 - [A100 vs H100 Deep Dive](https://timdettmers.com/2023/01/30/which-gpu-for-deep-learning/) — Tim Dettmers 的 GPU 选购指南
 - [Tensor Core 工作原理](https://developer.nvidia.com/blog/programming-tensor-cores-cuda-9/) — NVIDIA Developer Blog
+
+---
+
+## 术语表
+
+| 术语 | 说明 |
+|------|------|
+| **SM（Streaming Multiprocessor）** | GPU 的基本计算模块。每个 SM 包含若干 CUDA Core、Tensor Core、Warp Scheduler、寄存器堆和 Shared Memory |
+| **Tensor Core** | SM 内专用于矩阵乘加（MMA）的硬件单元，单指令可完成一个小矩阵（如 16×16）的乘加运算 |
+| **WMMA** | Warp Matrix Multiply-Accumulate，Tensor Core 的编程接口，以 warp（32 线程）为单位执行矩阵乘加 |
+| **NVLink** | NVIDIA GPU 之间的高速点对点互联，带宽远超 PCIe（H100 NVLink 4.0 双向 900 GB/s） |
+| **NVSwitch** | 专用交换芯片，实现一台机器内所有 GPU 之间的 NVLink 全互联（任意两卡之间都有 NVLink 直连） |
+| **MIG（Multi-Instance GPU）** | A100+ 支持的功能，将一张物理 GPU 切分为最多 7 个独立的 GPU 实例，每个有隔离的 SM 和显存 |
+| **Transformer Engine** | H100+ 内置的硬件加速模块，能动态在 FP8 和 FP16 之间切换精度，在不损失训练精度的前提下提速 |
+| **TF32（TensorFloat-32）** | NVIDIA 定义的特殊浮点格式：8 位指数（同 FP32）+ 10 位尾数（同 FP16）。兼顾范围和速度 |
+| **FP8** | 8 位浮点数格式（E4M3 或 E5M2），Hopper 架构原生支持，是目前最低精度的 Tensor Core 数据类型 |
+| **ECC** | Error-Correcting Code，显存纠错功能。会占用约 6% 的显存容量，但能防止长时间训练中的 bit flip 错误 |
+| **TDP** | Thermal Design Power，热设计功耗，表示芯片满载时的最大功耗 |

@@ -185,3 +185,15 @@ A: 换 GPT-2 350M 或 GPT-2 774M。模型越大，ZeRO 的显存收益越明显�
 - [nanoGPT](https://github.com/karpathy/nanoGPT) — Andrej Karpathy 的简洁 GPT 训练代码
 - [DeepSpeed Getting Started](https://www.deepspeed.ai/getting-started/)
 - [PyTorch DDP Tutorial](https://pytorch.org/tutorials/intermediate/ddp_tutorial.html)
+
+---
+
+## 术语表
+
+| 术语 | 说明 |
+|------|------|
+| **`torchrun`** | PyTorch 的分布式训练启动器，自动设置 rank、world_size 等环境变量 |
+| **nanoGPT** | Andrej Karpathy 的最简洁 GPT 训练代码，适合学习和实验 |
+| **tokens/s** | 每秒处理的 token 数，衡量训练吞吐量的核心指标 |
+| **step time** | 完成一次前向+反向传播+参数更新的总时间 |
+| **`torch.cuda.synchronize()`** | 等待 GPU 上所有工作完成，测量时间前必须调用，否则测不准 |

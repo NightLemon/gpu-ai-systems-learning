@@ -1,6 +1,6 @@
 # 混合精度训练
 
-> 用低精度（FP16/BF16）训练，获得接近 FP32 的精度和 2x+ 的速度。
+> 用低精度浮点数（FP16 或 BF16）做前向/反向传播，用 FP32 保存主权重做参数更新——兼顾训练速度和数值稳定性。这是当前几乎所有大模型训练的标配。
 
 ## 核心概念
 
@@ -87,3 +87,17 @@ A: PyTorch 默认开启。`torch.backends.cuda.matmul.allow_tf32 = True`。它�
 
 - [Mixed Precision Training](https://arxiv.org/abs/1710.03740) — Micikevicius et al., 2018
 - [PyTorch AMP Tutorial](https://pytorch.org/tutorials/recipes/recipes/amp_recipe.html)
+
+---
+
+## 术语表
+
+| 术语 | 说明 |
+|------|------|
+| **混合精度（Mixed Precision）** | 前向/反向传播用低精度（FP16/BF16）加速，参数更新用 FP32 保证数值稳定性 |
+| **FP32 / FP16 / BF16** | 32/16/16 位浮点格式。BF16 和 FP32 数值范围相同（指数位相同）但精度较低，是大模型训练的首选 |
+| **TF32** | TensorFloat-32，NVIDIA 定义的格式，8 位指数 + 10 位尾数。A100+ 的 Tensor Core 默认用 TF32 计算 FP32 矩阵乘法 |
+| **FP8** | 8 位浮点格式（E4M3 或 E5M2），H100+ 原生支持，速度最快但精度最低 |
+| **Loss Scaling** | 将 loss 乘以一个缩放因子后再反向传播，防止 FP16 梯度因太小而变成零（underflow）。BF16 不需要 |
+| **AMP** | Automatic Mixed Precision，PyTorch 提供的自动混合精度训练接口（`torch.cuda.amp`） |
+| **GradScaler** | PyTorch AMP 中的动态 Loss Scaling 管理器，自动调整缩放因子 |

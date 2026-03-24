@@ -1,6 +1,6 @@
 # Attention 机制
 
-> 从 Scaled Dot-Product 到 GQA——理解 Attention 的计算和变体。
+> 从基础的 Scaled Dot-Product Attention 到 GQA（Grouped Query Attention）——理解注意力机制的计算原理和实用变体。Attention 是 Transformer 架构的核心，它让模型在处理每个 token 时能“看到”序列中的其他所有 token。
 
 ## 核心概念
 
@@ -77,3 +77,18 @@ RoPE（Rotary Position Embedding）是当前最流行的选择——通过对 Q�
 - [Attention Is All You Need](https://arxiv.org/abs/1706.03762) — Vaswani et al., 2017
 - [GQA 论文](https://arxiv.org/abs/2305.13245) — Ainslie et al., 2023
 - [RoPE 详解](https://arxiv.org/abs/2104.09864) — Su et al., 2021
+
+---
+
+## 术语表
+
+| 术语 | 说明 |
+|------|------|
+| **Attention（注意力）** | 一种让模型动态地“关注”输入序列中不同位置的机制。通过 Q、K 的相似度计算权重，再对 V 加权求和 |
+| **Q / K / V** | Query、Key、Value。输入经过三个线性投影得到，Q 和 K 用于计算相似度，V 是被加权求和的内容 |
+| **MHA（Multi-Head Attention）** | 多头注意力。将 Q/K/V 分成多个“头”，各自独立计算 Attention 后拼接，让模型能同时关注不同类型的关系 |
+| **GQA（Grouped Query Attention）** | 分组查询注意力。多个 Q 头共享一组 K/V 头，在质量和 KV-Cache 大小之间取得平衡。LLaMA 2/3、Mistral 等均采用 |
+| **MQA（Multi-Query Attention）** | 多查询注意力。所有 Q 头共享同一组 K/V，KV-Cache 最小但质量稍差 |
+| **RoPE** | Rotary Position Embedding，旋转位置编码。通过对 Q/K 向量做旋转变换注入位置信息，当前最主流的位置编码方式 |
+| **ALiBi** | Attention with Linear Biases，在 Attention Score 上加一个与距离成正比的偏置来编码位置 |
+| **Softmax** | 将任意实数向量归一化为概率分布（所有元素非负且和为 1）的函数，在 Attention 中用于计算权重 |

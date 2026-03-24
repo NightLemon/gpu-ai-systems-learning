@@ -1,6 +1,6 @@
 # Triton 入门
 
-> 用 Python 写高性能 GPU kernel——Triton 让 CUDA 优化门槛大幅降低。
+> Triton 是 OpenAI 开发的 GPU 编程语言和编译器，允许你用 Python 写出接近手写 CUDA 性能的 GPU kernel。它自动处理 Shared Memory 管理、合并访存、Bank Conflict 等底层优化，大幅降低了 GPU 编程的门槛。
 
 ## 核心概念
 
@@ -210,3 +210,18 @@ A: 对于 GEMM：70-90%（取决于矩阵大小和形状）。对于融合算子
 - [Triton GitHub](https://github.com/triton-lang/triton)
 - [PyTorch TorchInductor Deep Dive](https://dev-discuss.pytorch.org/t/torchinductor-a-pytorch-native-compiler-with-define-by-run-ir-and-target-backends/747)
 - [Programming GPUs with Triton](https://www.youtube.com/watch?v=DdTsX6DQk24) — Philippe Tillet 的演讲
+
+---
+
+## 术语表
+
+| 术语 | 说明 |
+|------|------|
+| **Triton** | OpenAI 开发的 GPU 编程语言/编译器。用 Python 写 kernel，编译器自动优化为高效 GPU 代码 |
+| **`@triton.jit`** | Triton 的装饰器，将一个 Python 函数编译为 GPU kernel |
+| **Program** | Triton 中的执行单元，类似于 CUDA 的 Block。每个 program 处理一个数据块 |
+| **`tl.load` / `tl.store`** | Triton 的数据加载/存储原语，自动处理合并访存 |
+| **`tl.dot`** | Triton 的矩阵乘法原语，自动使用 Tensor Core |
+| **Auto-tuning** | Triton 内置的自动调优框架，在多种配置（Block Size、num_warps 等）中搜索最优参数 |
+| **TorchInductor** | PyTorch 2.0 `torch.compile()` 的后端编译器，默认使用 Triton 生成 GPU kernel |
+| **算子融合（Kernel Fusion）** | 将多个小操作合并为一个 kernel，减少 kernel 启动开销和中间结果的显存读写 |

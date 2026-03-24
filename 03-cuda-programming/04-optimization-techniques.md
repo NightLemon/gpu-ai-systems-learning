@@ -1,6 +1,6 @@
 # CUDA 优化技巧
 
-> 从 Profile 到 Optimize：系统化的 CUDA kernel 性能调优方法。
+> 从 Profile 到 Optimize：系统化的 CUDA kernel 性能调优方法。核心原则：**先用 Profiler 找到真正的瓶颈，再有针对性地优化**，不要猜。
 
 ## 核心概念
 
@@ -250,3 +250,19 @@ __global__ void kernel(float * __restrict__ a,
 - [CUDA C++ Best Practices Guide](https://docs.nvidia.com/cuda/cuda-c-best-practices-guide/) — 官方最佳实践
 - [Nsight Compute Documentation](https://docs.nvidia.com/nsight-compute/)
 - [CUTLASS: CUDA Templates for Linear Algebra Subroutines](https://github.com/NVIDIA/cutlass)
+
+---
+
+## 术语表
+
+| 术语 | 说明 |
+|------|------|
+| **Profile（性能分析）** | 使用专用工具采集程序运行时的性能数据（耗时、带宽利用率等），以定位瓶颈 |
+| **Nsight Systems (nsys)** | NVIDIA 的系统级 Profiler，查看 kernel、memcpy、NCCL 的时间线分布 |
+| **Nsight Compute (ncu)** | NVIDIA 的 kernel 级 Profiler，深入分析单个 kernel 的 roofline、stall 原因、occupancy |
+| **Memory Coalescing（合并访存）** | 同一 warp 的线程访问连续内存地址时，硬件可将多次访问合并为一次内存事务 |
+| **AoS vs SoA** | Array of Structs vs Struct of Arrays。SoA 布局对 GPU 更友好，因为同一字段在内存中连续，便于合并访问 |
+| **Warp Shuffle** | warp 内线程之间直接交换寄存器中的值，不需经过 Shared Memory，更快 |
+| **Grid-stride Loop** | 一种编程模式，让每个线程处理多个元素（每次跳 gridDim*blockDim 个位置），一个 kernel 可处理任意大小的数据 |
+| **`float4`** | CUDA 的向量类型，一次加载/存储 4 个 float (16 bytes)，减少内存事务次数 |
+| **`__restrict__`** | 告诉编译器指针不会别名（alias），允许更激进的优化（指令重排、向量化） |
