@@ -1,0 +1,57 @@
+# 梯度检查点（Gradient Checkpointing）
+
+> 用 ~30% 的额外计算换取 ~60-70% 的激活值显存节省。
+
+## 核心概念
+
+### 问题
+
+反向传播需要前向传播的中间激活值。标准做法是全部缓存 → 显存随层数线性增长。
+
+### 解决方案
+
+只保留部分层的激活值（checkpoint），其余在反向传播时重算：
+
+```
+标准: 保存所有层的激活值
+  Forward:  → [Act0] → [Act1] → [Act2] → ... → [ActN] → Loss
+  Backward: [ActN] → grad → [ActN-1] → grad → ... → [Act0]
+  显存: O(N) 层的激活值
+
+Checkpointing: 只保存每隔 K 层的激活值  
+  Forward:  → [Act0✓] → [Act1] → [Act2✓] → ... → Loss
+  Backward: 需要 Act1? → 从 Act0✓ 重新计算 Act1 → 计算梯度
+  显存: O(N/K) + 重计算开销 ~30%
+```
+
+### PyTorch 使用
+
+```python
+from torch.utils.checkpoint import checkpoint
+
+class TransformerBlock(nn.Module):
+    def forward(self, x):
+        x = x + self.attention(self.norm1(x))
+        x = x + self.ffn(self.norm2(x))
+        return x
+
+class Model(nn.Module):
+    def forward(self, x):
+        for block in self.blocks:
+            # 使用 checkpoint: forward 不保存中间激活值，backward 重算
+            x = checkpoint(block, x, use_reentrant=False)
+        return x
+```
+
+### Selective Checkpoint (Megatron-LM)
+
+不是整层重算，而是选择性地只重算"显存大但计算便宜"的操作：
+- **重算**：Attention Score ($N^2$ 显存)、Softmax、Dropout
+- **保留**：Linear 层输出（显存小但重算贵）
+
+→ 显存节省 50-70%，重计算开销 < 5%
+
+## 延伸阅读
+
+- [Training Deep Nets with Sublinear Memory Cost](https://arxiv.org/abs/1604.06174) — Chen et al., 2016
+- [PyTorch Checkpoint 文档](https://pytorch.org/docs/stable/checkpoint.html)
