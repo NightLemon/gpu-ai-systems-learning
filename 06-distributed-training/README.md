@@ -13,6 +13,7 @@
 | [05-expert-parallel.md](05-expert-parallel.md) | 专家并行 | Mixture of Experts、All-to-All |
 | [06-deepspeed.md](06-deepspeed.md) | DeepSpeed | ZeRO 系列、Offload、Inference |
 | [07-megatron-lm.md](07-megatron-lm.md) | Megatron-LM | 3D 并行、序列并行、实战配置 |
+| [08-training-strategy-guide.md](08-training-strategy-guide.md) | **选型指南** | 给定模型/硬件如何选择并行策略 |
 
 ## 为什么需要分布式训练？
 

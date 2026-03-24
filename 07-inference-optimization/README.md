@@ -13,6 +13,7 @@
 | [05-flash-attention.md](05-flash-attention.md) | FlashAttention | IO-aware 算法、Tiling、硬件感知优化 |
 | [06-vllm-architecture.md](06-vllm-architecture.md) | vLLM 架构 | PagedAttention、调度器、Serving 架构 |
 | [07-tensorrt-llm.md](07-tensorrt-llm.md) | TensorRT-LLM | 图优化、Kernel 融合、FP8 |
+| [08-inference-framework-guide.md](08-inference-framework-guide.md) | **框架选型** | vLLM vs TRT-LLM vs SGLang 决策指南 |
 
 ## LLM 推理的两个阶段
 

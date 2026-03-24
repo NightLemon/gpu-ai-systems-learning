@@ -92,16 +92,24 @@ Z = Z0 + Z1  ← 需要 AllReduce (ḡ 操作)
 ### 通信量分析
 
 ```
-对于 hidden_size = h, 序列长度 = s, batch_size = b:
+对于 hidden_size = h, 序列长度 = s, batch_size = b, dtype = FP16 (2 bytes):
 
-每层通信量 (TP 组内):
-  2 × AllReduce(b × s × h × sizeof(dtype))
-  
+每次 AllReduce 的数据量:
+  data_size = b × s × h × sizeof(dtype)   // 即 b × s × h × 2 bytes
+
 TP degree = T 时:
-  AllReduce 通信量 ≈ 2 × (T-1)/T × (b·s·h·2) bytes (每次)
-  每层 4 次 AllReduce（forward 2 + backward 2）
+  单次 AllReduce 通信量 = 2 × (T-1)/T × data_size
+  （Ring AllReduce 的 ReduceScatter + AllGather 两阶段，系数 2 来自此处）
 
-与 hidden_size 和 sequence_length 成正比 → 需要高带宽互联
+每个 Transformer 层:
+  Forward:  2 次 AllReduce (MHA 输出 + FFN 输出)
+  Backward: 2 次 AllReduce (对应梯度)
+  共 4 次 AllReduce
+
+  每层总通信量 = 4 × 2 × (T-1)/T × data_size
+              = 8(T-1)/T × b·s·h × sizeof(dtype)
+
+→ 与 hidden_size × seq_len 成正比 → 需要高带宽互联
 ```
 
 ### 为什么 TP 必须放在机内？

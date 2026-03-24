@@ -103,6 +103,60 @@ trtllm-build --model_dir meta-llama/Llama-2-7b-hf \
 
 ## 关键细节
 
+### Build Engine 的约束与影响
+
+```
+Build 阶段的关键参数（一旦确定，运行时不能改）:
+
+  --max_batch_size 64      构建时指定的最大 batch
+  --max_input_len 2048     最大输入长度
+  --max_seq_len 4096       最大总长度（输入+输出）
+  --tp_size 2              Tensor Parallel degree
+  --dtype float16          数据类型
+  --quantization fp8       量化方式
+
+⚠️ 以下任一改变都需要重新 build:
+  - 更换 GPU 型号（A100 → H100）
+  - 改变 TP/PP 配置
+  - 改变 max_batch_size / max_seq_len
+  - 改变量化方式
+  - 更新模型权重（如微调后）
+
+对线上发布意味着:
+  1. Build 耗时（7B ~10min, 70B ~30-60min）→ 不能热更新模型
+  2. 需要为不同配置维护多个 engine 文件
+  3. 发布流程: 新模型 → Build Engine → 验证 → 灰度发布
+  4. Engine 文件可能数十 GB → 需要存储和分发方案
+```
+
+### TRT-LLM 与 Triton 的职责边界
+
+```
+┌─────────────────────────────────────────────────────────┐
+│          Triton Inference Server                         │
+│  负责:                                                   │
+│  - HTTP/gRPC API 暴露                                   │
+│  - 请求排队和负载均衡                                     │
+│  - 多模型管理和版本切换                                   │
+│  - 健康检查和指标导出                                     │
+│  - 前后处理 pipeline (tokenize/detokenize)               │
+│                                                          │
+│  ┌───────────────────────────────────────────────────┐  │
+│  │          TensorRT-LLM Backend                      │  │
+│  │  负责:                                             │  │
+│  │  - 加载和运行 TRT Engine                           │  │
+│  │  - In-flight Batching (Continuous Batching)        │  │
+│  │  - KV-Cache 管理 (Paged)                          │  │
+│  │  - Beam Search / Sampling                          │  │
+│  │  - Tensor Parallel 协调                            │  │
+│  └───────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────┘
+
+关键: TRT-LLM 只管推理计算
+      Triton 管整个服务的生命周期
+      不用 Triton 也能用 TRT-LLM（直接用 Python API），但生产建议搭配
+```
+
 ### TensorRT-LLM vs vLLM 性能对比
 
 ```
@@ -115,50 +169,41 @@ trtllm-build --model_dir meta-llama/Llama-2-7b-hf \
   Max Throughput       ~2000       ~2500-3000  ← 整体优化
   
   差距主要来源:
-  - Kernel 融合更激进
-  - GEMM 针对特定形状优化
-  - FP8 整合更深
-  
-  但:
-  - vLLM 更新快、模型支持广
-  - TRT-LLM 需要 build engine（每换一个配置就要重新编译）
+  - Kernel 融合更激进（编译时已知 shape → 更优 kernel 选择）
+  - GEMM Plugin 针对特定矩阵形状优化
+  - FP8 整合更深（Hopper 原生）
 ```
 
-### Triton Inference Server 集成
-
-TensorRT-LLM 通常搭配 Triton Inference Server 部署：
+### 部署选型决策
 
 ```
-┌──────────────────────────────────────────────┐
-│          Triton Inference Server              │
-│  ┌─────────┐ ┌──────────────────────┐       │
-│  │ HTTP/gRPC│ │  Request Scheduler    │       │
-│  │ Frontend │→│  (Dynamic Batching)   │       │
-│  └─────────┘ └──────────┬───────────┘       │
-│                          │                    │
-│  ┌──────────────────────▼───────────────┐   │
-│  │      TensorRT-LLM Backend             │   │
-│  │   (In-flight Batching, PagedKV, FP8)  │   │
-│  └───────────────────────────────────────┘   │
-└──────────────────────────────────────────────┘
-```
+选型维度:
 
-### 何时选择 TensorRT-LLM
+1. 性能要求:
+   TRT-LLM 通常比 vLLM 快 15-30%（取决于场景）
+   如果 SLA 非常紧（如 TTFT < 50ms），TRT-LLM 更合适
+   如果性能差 15% 可接受，vLLM 的运维成本更低
 
-```
-✅ 选 TRT-LLM:
-  - 生产环境，性能要求极高
-  - 使用 NVIDIA GPU (A100/H100)
-  - 模型固定，不频繁更换
-  - 需要 FP8 量化最优性能
-  - 已有 Triton Inference Server 基础设施
+2. 模型更换频率:
+   每周或更频繁换模型 → vLLM（pip install 即用）
+   模型稳定、长期服务 → TRT-LLM（一次 build 长期运行）
 
-✅ 选 vLLM:
-  - 快速原型 / 研究
-  - 需要频繁切换模型
-  - 团队不熟悉 TensorRT
-  - 需要最新模型支持（vLLM 跟进更快）
-  - 需要灵活的自定义功能
+3. 团队能力:
+   不熟悉 TensorRT/NVIDIA 生态 → vLLM 上手快
+   有 NVIDIA TAM 支持或 TRT 经验 → TRT-LLM 能调到更优
+
+4. 硬件:
+   H100 + FP8 → TRT-LLM 的 FP8 优化是独占优势
+   A100 / 消费级 GPU → vLLM 和 TRT-LLM 差距缩小
+
+5. 功能需求:
+   需要 Speculative Decoding / 自定义采样 → 查各框架的支持程度
+   需要 LoRA serving / 多模态 → vLLM 生态更丰富
+
+6. 另一选择: SGLang
+   RadixAttention（更激进的前缀缓存）
+   某些场景性能超过 vLLM 和 TRT-LLM
+   快速迭代中，值得关注
 ```
 
 ## 常见问题

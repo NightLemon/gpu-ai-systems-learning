@@ -128,6 +128,76 @@ capacity = (total_tokens / num_experts) × capacity_factor × top_k
   跨机: DP
 ```
 
+### 通信量和性能瓶颈分析
+
+```
+MoE 层的通信特性 vs Dense 层:
+
+Dense (TP):
+  通信: AllReduce (每层 2 次)
+  模式: 规则，大小固定 = b × s × h × sizeof(dtype)
+  
+MoE (EP):
+  通信: All-to-All (每层 2 次)
+  模式: 不规则！每个 GPU 发送/接收的 token 数取决于路由结果
+  大小: 每 GPU 发送 ~(b×s×K/N) × h × sizeof(dtype)
+        但实际大小随路由分布波动
+
+All-to-All vs AllReduce:
+  AllReduce: 每对 GPU 交换 data_size/N → 带宽效率高 (Ring 算法)
+  All-to-All: 每对 GPU 交换不同数量 → 难以用 Ring 优化
+  → All-to-All 对网络延迟更敏感，跨机开销更大
+```
+
+**MoE 层的三大性能瓶颈**：
+
+```
+1. Token Dispatch 不均衡:
+   某些 expert 收到大量 token → GEMM 大 → 成为关键路径
+   其他 expert 空闲等待
+   → 解决: Capacity Factor 截断 + 辅助损失
+
+2. Small GEMM 效率低:
+   即使负载均衡，每个 expert 处理的 token 数 = total_tokens / N
+   当 N 很大时（如 64 experts），每个 expert 的 GEMM 很小
+   → 小矩阵的 Tensor Core 利用率低
+   → 解决: Grouped GEMM (将多个 expert 的 GEMM 合并成一个大 GEMM)
+
+3. 跨机 All-to-All 开销:
+   机内 NVLink All-to-All 尚可
+   跨机 IB All-to-All 延迟高、效率低
+   → 解决: EP 尽量放在机内，或用 hierarchical All-to-All
+```
+
+### MoE 训练 vs 推理的系统差异
+
+```
+训练:
+  ✅ batch size 大 → 每个 expert 的 GEMM 规模合理
+  ✅ All-to-All 的数据量和计算量可 overlap
+  ✅ 主要优势: 相同 FLOPs 下模型能力更强
+  ⚠️ 挑战: 训练不稳定（router 崩溃、expert 坍缩到几个）
+
+推理:
+  ✗ batch size 小（decode 时每请求 1 token）
+  ✗ 所有 expert 权重必须在显存中 → 显存 = N × expert_size
+  ✗ 每个 expert 收到 ≤1 个 token → GEMM 退化为 GEMV → 极低效率
+  ✗ All-to-All 延迟在 decode 关键路径上
+  
+→ MoE 训练"省算力"，但推理可能比同等效果的 dense 模型更贵
+→ 这就是为什么 MoE 需要特殊的推理优化（expert offloading、expert 稀疏化等）
+```
+
+### 近年的重要工程改进
+
+| 技术 | 解决什么问题 | 代表 |
+|------|------------|------|
+| **Shared Expert** | 保底能力 + 提高路由稳定性 | DeepSeek-MoE |
+| **Dropless MoE** | 避免 capacity 溢出丢 token | Megablocks |
+| **Expert Placement** | 将热门 expert 复制到多卡减少通信 | DeepSeek-V2 |
+| **Grouped GEMM** | 合并多个小 expert GEMM 提高 GPU 利用率 | Megablocks, Triton kernels |
+| **Hierarchical All-to-All** | 先机内再跨机，减少跨机通信量 | Tutel |
+
 ### DeepSpeed-MoE
 
 DeepSpeed 提供了高效的 MoE 实现：
@@ -151,15 +221,15 @@ moe_layer = deepspeed.moe.layer.MoE(
 
 **Q: MoE 推理时的挑战是什么？**
 
-A: 推理时 batch size 通常很小（甚至 1），但 token 可能被路由到不同的 expert。这导致：(1) 每个 expert 只处理很少的 token，GEMM 效率低；(2) 需要加载所有 expert 的权重，显存占用大；(3) All-to-All 通信的开销在小 batch 时占比更高。
+A: 推理时 batch size 通常很小（甚至 1），但 token 可能被路由到不同的 expert。这导致：(1) 每个 expert 只处理极少 token，GEMM 退化为 GEMV；(2) 所有 expert 权重必须在显存中（Mixtral 8x7B 需要 ~94 GB FP16）；(3) All-to-All 延迟难以隐藏。所以 **MoE 模型训练省算力≠推理省成本**。
 
 **Q: MoE 模型比同等计算量的 Dense 模型效果好多少？**
 
-A: 通常在相同计算预算下，MoE 能达到比 Dense 模型更好的效果（Mixtral 8x7B 接近 LLaMA 2 70B）。但 MoE 的推理成本（显存）更高，且训练不稳定性也更大。
+A: 在相同训练 FLOPs 下，MoE 通常优于 Dense（Mixtral 8x7B 接近 LLaMA 2 70B）。但 MoE 的推理成本、显存需求和训练稳定性都不如 Dense。选型要根据实际的训练预算 vs 推理预算比例来决定。
 
 **Q: Expert Choice 和 Token Choice 有什么区别？**
 
-A: Token Choice（标准方式）是每个 token 选择 Top-K expert。Expert Choice（Zhou et al., 2022）反过来——每个 expert 选择 Top-K token。Expert Choice 天然解决了负载均衡问题，但可能导致某些 token 不被任何 expert 处理。
+A: Token Choice（标准方式）是每个 token 选择 Top-K expert。Expert Choice（Zhou et al., 2022）反过来——每个 expert 选择 Top-K token。Expert Choice 天然解决负载均衡问题，但可能导致某些 token 不被任何 expert 处理。
 
 ## 延伸阅读
 

@@ -82,7 +82,8 @@ ZeRO Stage 2: 切分优化器状态 + 梯度 (OS+G)
 ZeRO Stage 3: 切分所有 (OS+G+P)
   每张卡只保存 1/N 的 optimizer states、gradients 和 parameters
   显存节省: ~N × (线性扩展！)
-  通信: forward/backward 时需要 AllGather 收集参数 → 通信量增加 ~1.5x
+  通信: forward/backward 时需要 AllGather 收集参数
+         相比 DDP/ZeRO-2 的 2Φ，ZeRO-3 为 3Φ（多 50%）
 ```
 
 ```
@@ -142,7 +143,7 @@ Backward Pass:
 
 其中 $\Phi$ = 参数量 × sizeof(dtype)。
 
-ZeRO-3 通信量多了 50%，但显存节省是线性的——这是**通信和显存的 trade-off**。
+ZeRO-3 / FSDP 的 $3\Phi$ 相比 DDP / ZeRO-2 的 $2\Phi$ 多了 50%。代价是每次 forward 和 backward 都需要额外的 AllGather 来收集当前层的完整参数。这是**通信换显存的 trade-off**——通信量增加 50%，但显存节省与 GPU 数量线性成正比。
 
 ### 混合精度 + ZeRO 的显存计算
 

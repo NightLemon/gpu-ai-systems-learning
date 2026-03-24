@@ -44,24 +44,34 @@ $$P(\text{accept } t_i) = \min\left(1, \frac{p_{\text{target}}(t_i)}{p_{\text{dr
 
 ```
 设:
-  γ = draft 长度
-  α = 平均 acceptance rate (0~1)
-  
-期望接受 token 数: 约 α/(1-α) (几何分布)
+  γ = draft 长度（每轮 draft model 生成的候选 token 数）
+  α = 平均单 token acceptance rate (0~1)
+  cost_ratio = draft_time / target_time
 
-加速比 ≈ (期望每轮生成的 token 数) / (target forward 次数)
-     ≈ (γ × α + 1) / (1 + γ × cost_ratio)
+直观估算:
+  每轮期望接受约 γ × α 个 draft token + 1 个 target 新生成的 token
+  → 每轮期望产出 ≈ γα + 1 个 token
+  → 每轮消耗 = 1 次 target forward + γ 次 draft forward
 
-其中 cost_ratio = draft_time / target_time
+加速比 ≈ (γα + 1) / (1 + γ × cost_ratio)
 
-理想情况 (draft 几乎免费, α≈0.8):
-  γ=5: 加速 ~2-3x
-  γ=10: 加速 ~3-4x
+当 draft 模型远小于 target 时 cost_ratio ≈ 0:
+  加速比 ≈ γα + 1
 
-实际因素:
-  - α 取决于 draft/target 模型的相似度
-  - 代码生成等确定性高的任务 → α 高 → 加速多
-  - 创意写作等随机性高的任务 → α 低 → 加速少
+示例 (cost_ratio ≈ 0.05):
+  α=0.8, γ=5:  加速 ≈ (5×0.8+1) / (1+5×0.05) = 5/1.25 = 4.0 → 实际约 2-3x
+  α=0.8, γ=10: 加速 ≈ (10×0.8+1)/ (1+10×0.05) = 9/1.5  = 6.0 → 实际约 3-4x
+  α=0.5, γ=5:  加速 ≈ (5×0.5+1) / (1+5×0.05) = 3.5/1.25 = 2.8 → 实际约 2x
+
+注: 严格推导需要考虑 rejection sampling 的几何分布特性
+    （每个 position 独立以概率 1-α 被拒），具体见原论文。
+    上述 γα+1 是常用的直观近似，在 α 较高时偏乐观。
+
+影响 α 的因素:
+  - draft/target 模型的相似度（同系列的大小模型 α 高）
+  - 任务类型: 代码补全等确定性高的任务 → α 高 → 加速大
+  - 任务类型: 创意写作等随机性高的任务 → α 低 → 加速小
+  - temperature: 低温 α 高，高温 α 低
 ```
 
 ### 变种
