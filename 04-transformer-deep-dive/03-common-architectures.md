@@ -2,6 +2,15 @@
 
 > GPT、LLaMA、Mistral、DeepSeek——了解当前主流大语言模型的关键设计差异。这些模型都是基于 Transformer 的 Decoder-only 架构（只用解码器，自回归生成），但在 Attention 变体、FFN 结构、位置编码等细节上有重要差异。
 
+## 为什么要了解模型架构的细节？
+
+你不需要设计新模型，但你需要知道“这个模型用了什么组件，对系统有什么影响”。比如：
+- LLaMA 用了 GQA 而不是 MHA → KV-Cache 小 4 倍 → 推理时能服务更多并发请求
+- Mistral 用了 Sliding Window Attention → KV-Cache 不会无限增长 → 长序列推理更省显存
+- DeepSeek-V2 用了 MoE + MLA → 参数大但每 token 只激活部分参数 → 训练效率高但推理显存压力大
+
+这些架构选择直接影响你的系统设计决策——用多少张卡、用什么并行策略、推理服务怎么配置。
+
 ## 架构对比
 
 | 特性 | GPT-3 | LLaMA 2 | LLaMA 3 | Mistral 7B | DeepSeek-V2 |

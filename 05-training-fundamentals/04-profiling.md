@@ -2,6 +2,23 @@
 
 > 优化之前必须先 Profile——用专用工具采集运行时的性能数据，找到真正的瓶颈在哪（是 GPU 计算不够快？是带宽不够？还是数据加载太慢？）。
 
+## “感觉慢”不等于“知道哪里慢”
+
+你的训练慢了，你可能的第一反应是“加 GPU”或“开 FlashAttention”。但实际上，瓶颈可能在你想不到的地方：
+
+- DataLoader 喂数据太慢 → GPU 空等（看起来像是 GPU 慢）
+- NCCL AllReduce 通信占了 40% 时间 → 网络是瓶颈（看起来像是计算慢）
+- 某个没融合的小 kernel 每次只跑 10μs 但被调用 1000 次 → kernel launch 开销累积成大瓶颈
+
+所以专业的做法是：**先用 Profiler 采集数据，看清楚时间花在哪，再决定优化什么**。不同的工具解决不同层面的问题：
+
+| 想知道什么 | 用什么工具 |
+|-----------|------------|
+| 哪个 PyTorch 算子最耗时 | PyTorch Profiler |
+| GPU kernel、通信、CPU 的时间线分布 | Nsight Systems (nsys) |
+| 单个 kernel 为什么慢（roofline、stall 原因） | Nsight Compute (ncu) |
+| GPU 利用率、显存、温度实时监控 | nvidia-smi |
+
 ## 核心工具
 
 ### 1. PyTorch Profiler

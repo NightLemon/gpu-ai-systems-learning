@@ -2,6 +2,16 @@
 
 > 从基础的 Scaled Dot-Product Attention 到 GQA（Grouped Query Attention）——理解注意力机制的计算原理和实用变体。Attention 是 Transformer 架构的核心，它让模型在处理每个 token 时能“看到”序列中的其他所有 token。
 
+## 为什么系统工程师要理解 Attention？
+
+你不需要从零设计模型，但你需要能回答这些问题：
+- 为什么 Attention 的显存和计算量与序列长度的平方成正比？（这直接影响你能支持多长的上下文）
+- 为什么 GQA 能让推理速度提升 2-4 倍？（因为减少了 KV-Cache 大小）
+- 为什么 FlashAttention 能同时加速和省显存？（因为避免了 N×N 矩阵写入 HBM）
+- Tensor Parallel 怎么切分 Attention 的头？（多头设计天然支持按头切分）
+
+这些问题的答案都藏在 Attention 的计算结构里。理解它不是为了做算法研究，而是为了让你在做系统优化时知道“为什么这么做是对的”。
+
 ## 核心概念
 
 ### Scaled Dot-Product Attention

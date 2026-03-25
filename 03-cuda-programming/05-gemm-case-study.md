@@ -2,6 +2,12 @@
 
 > 矩阵乘法（GEMM，General Matrix Multiply）是深度学习中最核心的计算操作，也是衡量 GPU 优化能力的试金石。全连接层、注意力机制、卷积层的底层计算本质上都是 GEMM。
 
+## 为什么 GEMM 是“GPU 编程的必修课”？
+
+如果你只能学一个 CUDA 优化案例，那应该是 GEMM。原因很简单：**大模型训练和推理中 70-80% 的 GPU 时间都花在矩阵乘法上**。无论是 Transformer 的 QKV 投影、Attention 计算、FFN 层，还是卷积（通过 im2col 转化），底层都是 GEMM。
+
+GEMM 优化也是理解所有 GPU 优化技术的最佳载体——Tiling、Shared Memory、Register Blocking、向量化访存、双缓冲、Tensor Core 这些技术全都能在 GEMM 优化中用到。把 GEMM 从朴素实现优化到接近 cuBLAS 性能的过程，就是一次完整的 GPU 优化实战训练。
+
 ## 核心概念
 
 ### 为什么关注 GEMM？

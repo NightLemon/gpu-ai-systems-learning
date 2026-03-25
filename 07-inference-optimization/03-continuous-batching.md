@@ -1,6 +1,16 @@
 # Continuous Batching
 
-> 将 LLM 推理服务的请求调度从“按 batch 调度”升级为“按 iteration 调度”。传统方式是凑齐一个 batch、等所有请求结束后才处理下一批；Continuous Batching 允许每一次 decode 迭代都可以加入新请求或移除已完成的请求，从而大幅提升系统吞吐。
+> 将 LLM 推理服务的请求调度从“按 batch 调度”升级为“按 iteration 调度”。
+
+## 传统 Batching 的问题
+
+你架设了一个 LLM 推理服务，同时有 3 个用户请求。用户 A 要生成 100 个 token，用户 B 只要 10 个，用户 C 要 50 个。
+
+传统做法（Static Batching）是把它们凑成一个 batch，等**最慢的那个**完成后才处理下一批。B 在第 10 步就完了，但它占着的 GPU 资源要一直空等到 A 生成完 100 个 token——资源浪费严重。
+
+**Continuous Batching** 解决这个问题：每一次 decode 迭代都可以加入新请求或移除已完成的请求。B 完成后立即释放，新请求 D 马上填进来。GPU 始终在做有用工作，吞吐量提升 2-8 倍。
+
+这是现代 LLM 推理引擎（vLLM、TGI、SGLang 等）的标配功能。
 
 ## 核心概念
 

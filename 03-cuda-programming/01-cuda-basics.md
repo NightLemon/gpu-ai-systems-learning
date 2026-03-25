@@ -2,9 +2,22 @@
 
 > 第一个 CUDA 程序：理解 Host/Device 模型、kernel 编写与启动。CUDA（Compute Unified Device Architecture）是 NVIDIA 提供的 GPU 编程框架，允许你用类 C++ 的语法编写运行在 GPU 上的并行程序。
 
+## 为什么要学 CUDA？不是有 PyTorch 了吗？
+
+PyTorch 确实封装了绝大多数 GPU 操作，你可以用 `tensor.cuda()` 就把数据传到 GPU 上。但当你需要做以下事情时，就必须理解 CUDA：
+
+- **写自定义算子（Custom Operator）**：比如实现一种新的 Attention 变体，PyTorch 没有现成的
+- **理解性能瓶颈**：为什么某个操作在 Profile 里显示很慢？不懂 CUDA 就无法理解 kernel 的行为
+- **读懂框架源码**：FlashAttention、vLLM、NCCL 的核心代码都是 CUDA
+- **面试**：几乎所有 GPU 系统岗位都会问 CUDA 基础
+
+本节从零开始，带你写出第一个能跑在 GPU 上的程序。
+
 ## 核心概念
 
-### Host 与 Device
+### Host 与 Device：两个世界
+
+CUDA 编程的核心思维是“两个世界”——CPU（Host）和 GPU（Device）是两个独立的计算单元，有各自的内存。你需要显式地：分配 GPU 内存 → 把数据从 CPU 拷到 GPU → 启动 GPU 上的计算（kernel）→ 把结果拷回 CPU。虽然看起来繁琐，但这个明确的分离让你对数据在哪里、怎么搬运有完全的控制权。
 
 ```
 ┌─────────── Host (CPU) ────────────┐    ┌─────────── Device (GPU) ──────────┐

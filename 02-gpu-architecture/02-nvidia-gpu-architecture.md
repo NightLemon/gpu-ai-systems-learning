@@ -2,11 +2,22 @@
 
 > 从 Volta 到 Blackwell，理解每一代 NVIDIA GPU 架构的核心改进及其对 AI 工作负载的影响。
 
+## 为什么要了解 GPU 架构？
+
+你可能会问："我又不设计 GPU，为什么要关心它的内部结构？"
+
+原因是：**当你优化 CUDA kernel、选择并行策略、排查训练性能问题时，所有决策的底层逻辑都来自硬件限制**。比如：
+- 为什么 Tensor Parallel 必须放在机内而不能跨机？→ 因为 NVLink 带宽比 InfiniBand 高 18 倍
+- 为什么 H100 训练 LLM 比 A100 快 3x 而不只是快 50%？→ 因为 Transformer Engine 和 FP8 Tensor Core
+- 为什么模型推理时显存比算力更容易成为瓶颈？→ 因为 GPU 的 FLOPS 增长远快于 HBM 带宽增长
+
+了解这些硬件特性不需要你成为芯片设计师，但能让你**在做系统决策时有正确的直觉**。
+
 ## 核心概念
 
 ### Streaming Multiprocessor（SM，流式多处理器）— GPU 的基本计算单元
 
-SM 是构成 GPU 的核心模块。可以把 GPU 理解为由数十到上百个 SM 组装而成的"计算工厂"，每个 SM 是一个独立的"车间"，内部包含：
+SM 是构成 GPU 的核心模块。如果把 GPU 比作一个工厂，那每个 SM 就是一个**独立的车间**——有自己的工人（CUDA Core、Tensor Core）、工作台（Shared Memory）、工具柜（Register File）和调度员（Warp Scheduler）。一个 GPU 由数十到上百个这样的车间组成：
 
 ```
 ┌──────────────────── SM (Streaming Multiprocessor) ────────────────────┐

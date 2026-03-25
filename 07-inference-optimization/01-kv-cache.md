@@ -2,6 +2,14 @@
 
 > KV-Cache 是大语言模型自回归生成（逐 token 输出）时的核心缓存机制。它缓存已生成 token 的 Key 和 Value 向量，避免每一步都重新计算。不理解 KV-Cache 就无法理解 LLM 推理的显存和性能特性。
 
+## 为什么 KV-Cache 是推理优化的第一课？
+
+当你用 ChatGPT 获得一段 100 个 token 的回复时，模型实际上执行了 100 次 前向传播（每次只生成 1 个 token）。如果没有 KV-Cache，每次生成都要对**所有已有 token** 重新计算 Attention——第 100 次生成时要对 99 个历史 token 重新算一遍 K 和 V，计算量为 O(N²)，完全不可接受。
+
+KV-Cache 的思路很简单：既然历史 token 的 K、V 不会变，**算一次就缓存下来，后续生成时直接复用**。这把每步的计算量从 O(N²) 降到 O(N)。
+
+但这带来了新问题：**KV-Cache 要占显存**。对于一个 7B 模型，单个请求的 KV-Cache 可能占 512 MB（GQA）到 2 GB（MHA）。并发 100 个请求，KV-Cache 就可能超过模型本身的大小。推理优化的很大一部分工作就是在管理这块显存（PagedAttention、KV-Cache 量化、GQA 等）。
+
 ## 核心概念
 
 ### 为什么需要 KV-Cache？

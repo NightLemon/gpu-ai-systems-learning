@@ -2,6 +2,14 @@
 
 > Shared Memory（共享内存）是 GPU SM 内部的高速存储，同一个 Block 内的所有线程都可以读写。它是 CUDA 优化的核心工具——用它作为手动管理的缓存，可以将对慢速 Global Memory（显存）的访问减少到最低限度。
 
+## 用一个比喻理解 Shared Memory
+
+回想一下 Ch02 的显存层级图。Global Memory（HBM）访问延迟 ~400 周期，Shared Memory 只要 ~20 周期——快了 20 倍。
+
+把它想成一个团队协作的场景：32 个人（一个 Block）在同一间办公室里工作。Global Memory 就像远处的仓库，取一次资料要走 20 分钟。Shared Memory 就像办公室中间的共享工作台，拿东西只要 1 分钟。
+
+所以明昺的做法是：**先派人去仓库把需要的资料批量搬到工作台上（加载到 Shared Memory），然后所有人在工作台上反复取用（从 Shared Memory 读），完事后再把结果一次性送回仓库（写回 Global Memory）**。这就是 Tiling（分块）的核心思想。
+
 ## 核心概念
 
 ### 为什么需要 Shared Memory？

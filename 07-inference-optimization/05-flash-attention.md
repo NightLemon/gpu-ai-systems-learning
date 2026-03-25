@@ -1,6 +1,14 @@
 # FlashAttention
 
-> 一种 IO-aware（考虑内存读写开销）的 Attention 算法。标准 Attention 会将 N×N 的中间矩阵写入显存（HBM），FlashAttention 通过分块（Tiling）将计算保持在片上高速存储（SRAM）中完成，避免大量 HBM 读写，实现 2-4x 加速 + 显存线性下降。
+> 一种 IO-aware（显式考虑显存读写开销）的 Attention 算法。标准 Attention 会将 N×N 的中间矩阵写入显存（HBM），FlashAttention 通过分块（Tiling）将计算保持在片上高速存储（SRAM）中完成，避免大量 HBM 读写，实现 2-4x 加速 + 显存线性下降。
+
+## 为什么 FlashAttention 能同时又快又省？
+
+通常你习惯的“速度”和“显存”是两个独立的维度——加速通常意味着更多资源消耗。但 FlashAttention 同时做到了两者，秘密在于：
+
+标准 Attention 的性能瓶颈不在计算，而在“读写 HBM”。它先算出一个 N×N 的 Attention Score 矩阵（可能有几百 MB），写入 HBM；然后读出来做 softmax；再写回；再读出来乘 V……光是这个矩阵的读写就把 HBM 带宽占满了。
+
+FlashAttention 的关键洞察：**这个 N×N 矩阵完全不需要存在 HBM 里**。通过分块（Tiling）+ 在线 Softmax（Online Softmax），可以一次处理一小块，在片上 SRAM 中完成计算后直接丢弃。HBM 读写量大幅减少 → 既省显存又快。
 
 ## 核心概念
 

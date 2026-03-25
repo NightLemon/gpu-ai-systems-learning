@@ -2,6 +2,14 @@
 
 > Triton 是 OpenAI 开发的 GPU 编程语言和编译器，允许你用 Python 写出接近手写 CUDA 性能的 GPU kernel。它自动处理 Shared Memory 管理、合并访存、Bank Conflict 等底层优化，大幅降低了 GPU 编程的门槛。
 
+## 为什么需要 Triton？CUDA 不够用吗？
+
+前面几节你已经看到，写一个高效的 CUDA kernel 需要关心很多底层细节：Shared Memory 分配、Bank Conflict 避免、合并访存、寄存器压力、Occupancy 调优……这些对于専业 GPU 工程师是日常，但对于想快速实现一个自定义算子的 AI 研究员来说是巨大的门槛。
+
+Triton 的定位是：**用 Python 写 GPU kernel，让编译器而不是程序员来处理那些底层优化**。你只需要描述“这个 Block 要处理哪块数据、做什么计算”，Triton 编译器自动帮你安排 Shared Memory、确保合并访存、避免 Bank Conflict。
+
+这意味着：写 30 行 Triton Python 能达到写 300 行 CUDA C++ 的 70-90% 性能。而且 PyTorch 2.0 的 `torch.compile()` 在幕后就是用 Triton 生成 kernel 的——所以理解 Triton 也能帮你理解 `torch.compile()` 的工作原理。
+
 ## 核心概念
 
 ### 什么是 Triton？

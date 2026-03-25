@@ -2,6 +2,12 @@
 
 > 微软的深度学习优化库，以 ZeRO 系列为核心，覆盖训练和推理全链路。
 
+## DeepSpeed 解决什么问题？
+
+如果你已经读了前面的 ZeRO 章节，你知道“切分优化器状态/梯度/参数”能省显存。但自己实现这些很复杂——你需要处理 AllGather/ReduceScatter 的时机、混合精度的 loss scaling、梯度累积的边界条件……
+
+DeepSpeed 的价值是：**把这些复杂的优化封装成 JSON 配置**。你只需要写一个 `ds_config.json`，就能开启 ZeRO Stage 1/2/3、CPU Offload、混合精度等功能。几乎不需要改你的训练代码。对于想快速跑起分布式训练的团队，这极大地降低了门槛。
+
 ## 核心概念
 
 ### DeepSpeed 是什么
