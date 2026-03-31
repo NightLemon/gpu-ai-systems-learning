@@ -16,7 +16,8 @@
 Checkpoint 保存/恢复:
   特点: 少量超大文件，突发写入
   要求: 写入速度要快（否则 GPU 空等），恢复也要快
-  大小: 7B 模型 ~56 GB, 175B 模型 ~2 TB per checkpoint
+  大小: 与参数精度、优化器状态和并行策略有关
+        仅权重文件和"可恢复训练状态"的大小往往不是一回事
   频率: 每 1000-5000 步保存一次
   方向: 写为主，恢复时读
 
@@ -89,6 +90,15 @@ Consolidated Checkpoint (保存后合并为 full):
   ✗ 合并步骤需要时间和临时空间
 ```
 
+### 怎么选 checkpoint 方案
+
+| 场景 | 更适合的方案 | 原因 |
+|------|-------------|------|
+| 单机或小规模实验 | Full checkpoint | 实现最简单，恢复方便 |
+| 长时间大规模训练 | Sharded checkpoint | 写入压力小，恢复主路径更现实 |
+| 训练和发布都需要 | Sharded + 周期性 consolidated | 训练期追求速度，发布期需要通用格式 |
+| 云上冷备份 | 本地/共享存储热 checkpoint + 对象存储归档 | 不让对象存储成为恢复主路径 |
+
 ### 异步 Checkpoint
 
 ```
@@ -102,7 +112,7 @@ Consolidated Checkpoint (保存后合并为 full):
                             ↓
             [CPU 后台线程写入存储]
   
-  GPU 只需等待 GPU→CPU 拷贝（~几秒），然后继续训练
+  GPU 只需等待 GPU→CPU 拷贝或 staging 完成，然后继续训练
   后台 IO 不阻塞训练
 
 PyTorch 2.0+ (torch.distributed.checkpoint):
@@ -161,6 +171,16 @@ PyTorch 2.0+ (torch.distributed.checkpoint):
   3. 预取: 训练的同时后台加载 checkpoint 到 CPU 内存
   4. 对象存储只做冷存归档，不做训练恢复的主路径
 ```
+
+### 训练数据路径和 checkpoint 路径要分开设计
+
+一个常见错误是把训练样本读取和 checkpoint 写入都压到同一条共享存储路径上。这样在 checkpoint 时刻，训练数据读取很容易被写入流量挤压，直接表现为 step time 毛刺。
+
+更稳妥的设计是：
+
+- 训练数据主路径以稳定读吞吐为目标
+- checkpoint 主路径以突发写入和恢复速度为目标
+- 两者即使共用底层集群，也最好在目录、QoS、缓存层或存储池上隔离
 
 ## 常见问题
 

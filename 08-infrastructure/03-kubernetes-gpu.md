@@ -133,6 +133,20 @@ spec:
      否则 CPU↔GPU PCIe 传输走跨 NUMA QPI → 带宽减半
 ```
 
+### K8s 上做训练前，先确认这四件事
+
+1. **资源能否原子分配**
+   训练作业需要 gang scheduling，否则很容易出现部分 Pod 抢到 GPU、其余 Pod 长时间排队的资源死锁。
+
+2. **拓扑是否被显式建模**
+   只会分配 `nvidia.com/gpu` 还不够。还要确认 GPU、CPU、网卡、NUMA 和 NVLink 拓扑是否会影响调度结果。
+
+3. **网络是否走宿主机和 RDMA 设备**
+   如果分布式训练要用 NCCL + RDMA，就要确认 host networking、RDMA device plugin、CNI 策略和防火墙规则没有挡住数据面。
+
+4. **共享存储和 /dev/shm 是否足够**
+   很多训练任务不是死在 GPU 数量上，而是死在默认 64MB 的 `/dev/shm`、缺失的 checkpoint 目录挂载或容器权限上。
+
 ### K8s vs Slurm：训练集群的实际选择
 
 | 方面 | Kubernetes | Slurm |
@@ -188,7 +202,11 @@ A: 除了 GPU，通常还需要：(1) 扩大的 `/dev/shm`（NCCL shared memory�
 
 **Q: Kueue 和 Volcano 怎么选？**
 
-A: Kueue 是 K8s SIG 官方项目，更轻量且与 K8s 生态集成更好。Volcano 功能更丰富（支持 MPI Job、TensorFlow Job 等自定义 CRD）。小规模选 Kueue，大规模或需要复杂调度策略选 Volcano。
+A: Kueue 更偏“排队和准入控制”，决定一个 Job 什么时候被允许进入调度；Volcano 更像面向批处理/HPC 的调度器扩展，直接参与 gang scheduling 和作业编排。只需要队列管理时 Kueue 更轻；需要更强的训练作业调度能力时，Volcano 往往更直接。
+
+**Q: K8s 什么时候不值得硬上？**
+
+A: 如果你的核心诉求是稳定跑大规模分布式训练，集群形态也比较固定，Slurm 往往更省事。K8s 更适合训练、推理、开发、多租户平台共存的环境。问题不在于哪个“先进”，而在于你是否愿意为统一平台承担更高的系统复杂度。
 
 ## 延伸阅读
 
@@ -212,4 +230,4 @@ A: Kueue 是 K8s SIG 官方项目，更轻量且与 K8s 生态集成更好。Vol
 | **Kueue** | K8s SIG 官方的作业队列管理器，更轻量 |
 | **Slurm** | 传统 HPC 集群的作业调度器，原生支持 GPU 和拓扑感知 |
 | **MIG** | Multi-Instance GPU，将一张 GPU 切分为多个独立实例，适合推理场景多模型共享一张卡 |
-| **hostNetwork** | K8s Pod 直接使用宿主机网络（而非虚拟网络），NNCL/RDMA 训练通常需要 |
+| **hostNetwork** | K8s Pod 直接使用宿主机网络（而非虚拟网络），NCCL/RDMA 训练通常需要 |

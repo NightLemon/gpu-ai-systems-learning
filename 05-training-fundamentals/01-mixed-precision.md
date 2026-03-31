@@ -4,7 +4,7 @@
 
 ## 为什么不能全用 FP32 训练？
 
-回想 Ch02 中的 GPU 架构：H100 的 FP32 CUDA Core 算力是 67 TFLOPS，但 BF16 Tensor Core 算力是 1979 TFLOPS——差了 **30 倍**。如果你用 FP32 训练，等于只用了这张卡 3% 的算力。
+回想 Ch02 中的 GPU 架构：H100 的 FP32 算力大约是 67 TFLOPS，而 BF16 Tensor Core 峰值远高于此。按 dense 口径常见值约 **989 TFLOPS**，按带结构化稀疏的宣传口径则常写成 **1979 TFLOPS**。无论采用哪种口径，低精度 Tensor Core 吞吐都远高于 FP32，所以如果你全程用 FP32 训练，就无法充分利用现代训练卡的主要算力。
 
 但直接用 FP16 又有问题：FP16 的数值范围很小（最大值只有 65504），训练中的梯度可能非常小，小到 FP16 表示不了（underflow 变成 0），导致训练不收敛或 loss 突然变成 NaN。
 
@@ -45,25 +45,26 @@ Master Weights (FP32) ─── 保持高精度的权重副本
 ### PyTorch AMP
 
 ```python
-from torch.cuda.amp import autocast, GradScaler
+import torch
+from torch import amp
 
-scaler = GradScaler()  # FP16 需要，BF16 不需要
+scaler = amp.GradScaler("cuda")  # FP16 需要，BF16 通常不需要
 
 for batch in dataloader:
-    optimizer.zero_grad()
-    
-    with autocast(dtype=torch.bfloat16):  # 或 torch.float16
-        output = model(batch)
-        loss = criterion(output)
-    
-    # FP16: 需要 scaler
-    scaler.scale(loss).backward()
-    scaler.step(optimizer)
-    scaler.update()
-    
-    # BF16: 不需要 scaler（范围够大，不会 underflow）
-    # loss.backward()
-    # optimizer.step()
+     optimizer.zero_grad()
+
+     with amp.autocast("cuda", dtype=torch.bfloat16):  # 或 torch.float16
+          output = model(batch)
+          loss = criterion(output)
+
+     # FP16: 需要 scaler
+     scaler.scale(loss).backward()
+     scaler.step(optimizer)
+     scaler.update()
+
+     # BF16: 不需要 scaler（范围够大，不会 underflow）
+     # loss.backward()
+     # optimizer.step()
 ```
 
 ### Loss Scaling（仅 FP16 需要）
@@ -89,7 +90,7 @@ A: 因为训练中数值的动态范围比精度更重要。FP16 最大值只有
 
 **Q: TF32 怎么开启？**
 
-A: PyTorch 默认开启。`torch.backends.cuda.matmul.allow_tf32 = True`。它只影响 matmul 操作——使用 FP32 输入/输出，但 Tensor Core 内部以 TF32 精度计算（更快，精度足够）。
+A: 需要分版本和后端来看。旧接口里，`torch.backends.cuda.matmul.allow_tf32` 控制 matmul，`torch.backends.cudnn.allow_tf32` 控制 cuDNN；自 PyTorch 1.12 起，matmul 的旧默认值已经不是简单的“默认开启”。当前文档更推荐使用新的 precision 设置接口做更细粒度控制。实践上，把它理解为“FP32 工作负载是否允许内部用 TF32 加速”会更准确。
 
 ## 延伸阅读
 
@@ -104,8 +105,8 @@ A: PyTorch 默认开启。`torch.backends.cuda.matmul.allow_tf32 = True`。它�
 |------|------|
 | **混合精度（Mixed Precision）** | 前向/反向传播用低精度（FP16/BF16）加速，参数更新用 FP32 保证数值稳定性 |
 | **FP32 / FP16 / BF16** | 32/16/16 位浮点格式。BF16 和 FP32 数值范围相同（指数位相同）但精度较低，是大模型训练的首选 |
-| **TF32** | TensorFloat-32，NVIDIA 定义的格式，8 位指数 + 10 位尾数。A100+ 的 Tensor Core 默认用 TF32 计算 FP32 矩阵乘法 |
+| **TF32** | TensorFloat-32，NVIDIA 定义的格式，8 位指数 + 10 位尾数。A100+ 的 Tensor Core 可用它加速部分 FP32 矩阵运算；具体默认行为取决于 PyTorch 版本和后端设置 |
 | **FP8** | 8 位浮点格式（E4M3 或 E5M2），H100+ 原生支持，速度最快但精度最低 |
 | **Loss Scaling** | 将 loss 乘以一个缩放因子后再反向传播，防止 FP16 梯度因太小而变成零（underflow）。BF16 不需要 |
-| **AMP** | Automatic Mixed Precision，PyTorch 提供的自动混合精度训练接口（`torch.cuda.amp`） |
+| **AMP** | Automatic Mixed Precision，PyTorch 提供的自动混合精度训练接口。新代码更推荐使用 `torch.amp` |
 | **GradScaler** | PyTorch AMP 中的动态 Loss Scaling 管理器，自动调整缩放因子 |

@@ -12,10 +12,10 @@
 链路层:    InfiniBand / RoCE (RDMA over Converged Ethernet)
 物理层:    光纤 / 铜缆
 
-RDMA 的核心价值: 绕过 CPU 和 OS 内核，GPU 显存直接读写远端 GPU 显存
-  → 延迟: ~1-2 μs (vs TCP 的 ~50-100 μs)
-  → 带宽: 接近线速
-  → CPU 零占用（不涉及内核态上下文切换）
+RDMA 的核心价值: 绕过 CPU 和 OS 内核，直接在两端内存之间做低开销数据传输。
+  → 对训练最重要的是更低的通信开销和更高的带宽利用率
+  → 当源或目标内存是 GPU 显存时，通常还需要 GPUDirect RDMA 配合
+  → 与 TCP 相比，RDMA 通常能显著降低延迟和 CPU 开销
 ```
 
 ### InfiniBand vs RoCE
@@ -31,7 +31,7 @@ RDMA 的核心价值: 绕过 CPU 和 OS 内核，GPU 显存直接读写远端 GP
 | 运维 | 需要 IB 专业知识 | 网络团队更熟悉 |
 | 适用 | 大规模 AI 训练（>256 GPU） | 中等规模 / 混合集群 |
 
-**选择依据**：超过 256 GPU 的训练集群通常选 InfiniBand（稳定性更好，免调 PFC/ECN）。中小规模或已有以太网基础设施的团队可以用 RoCE，但需要投入调参精力。
+**选择依据**：大规模训练集群通常优先选 InfiniBand，因为稳定性和运维确定性更高。已有成熟以太网基础设施的团队也可以用 RoCE，但要把 PFC、ECN、QoS 和故障演练一起纳入设计，而不是只看链路带宽。
 
 ### GPUDirect 技术栈
 
@@ -41,8 +41,8 @@ GPUDirect Storage:
 
 GPUDirect RDMA:
   GPU0 显存 → 网卡 → 网络 → 网卡 → GPU1 显存
-  → 完全绕过 CPU / 系统内存
-  → NCCL 默认启用（需要 nvidia_peermem 内核模块）
+  → 数据路径尽量绕过 CPU / 系统内存
+  → 是否真正走通取决于驱动、网卡、内核模块和 NCCL 拓扑探测结果
 
 GPUDirect P2P (同一节点):
   GPU0 → NVLink → GPU1（不走 PCIe，延迟最低）
@@ -74,9 +74,9 @@ Oversubscription:
   2:1 = 跨机架带宽减半（常见的折中）
   3:1+ = 跨机架带宽严重不足（不适合训练，AllReduce 会卡）
   
-⚠️ 训练集群必须 ≤ 2:1 oversubscription
-   如果跨机架有 oversubscription → DP 通信放这里（可 overlap 隐藏）
-   TP/PP 的通信绝不能跨有 oversubscription 的链路
+⚠️ 对训练集群来说，oversubscription 越低越好，很多生产环境会把关键训练路径控制在 2:1 或更低。
+  如果跨机架有 oversubscription → 更适合放 DP 这类更容易 overlap 的通信
+  TP/PP 则应尽量避开这类链路，尤其是 TP
 ```
 
 ### 并行策略到网络拓扑的映射
@@ -89,7 +89,7 @@ Oversubscription:
   通信量小 + 可异步   → 放在低带宽高延迟互联上
 
 典型映射:
-  机内 NVLink (900 GB/s, <1μs):     Tensor Parallel (每层都通信)
+  机内 NVLink (900 GB/s, <1μs):     Tensor Parallel（通常优先放这里）
   机架内 IB 全线速 (~200+ Gbps):    Pipeline Parallel (只传激活值)
   跨机架 IB (可能有 oversubscription): Data Parallel (可 overlap)
 ```
@@ -111,8 +111,25 @@ Oversubscription:
 
 方案 B (不推荐):
   TP=16 跨两台机器
-  → NVLink 900 GB/s vs IB 50 GB/s → TP 通信慢 18x → 整体性能崩 ✗
+  → TP 通信落到跨机网络上，带宽和时延都更差，且通信位于关键路径
+  → 结果通常会明显差于机内 TP；是否“崩”取决于网络代际、rail 数量、隐藏维度和 overlap 能力 ✗
 ```
+
+### 一个实用的放置检查表
+
+把并行策略映射到物理网络时，可以先问四个问题：
+
+1. **哪一类并行最怕延迟？**
+  通常是 TP，其通信频繁且常在关键路径上，应优先留给机内 NVLink/NVSwitch。
+
+2. **哪一类并行最吃总带宽？**
+  大规模 DP、FSDP、EP 的集合通信或 all-to-all 往往最吃网络总带宽，应尽量放在全双工、低 oversubscription 的路径上。
+
+3. **哪一类并行最容易 overlap？**
+  DP 梯度同步通常更容易和 backward overlap，所以更适合放到相对慢一些但可预测的跨机路径上。
+
+4. **哪一类通信最容易被长尾拖慢？**
+  EP 的 all-to-all 和跨机 TP 都很怕个别节点或链路异常，放置时要尽量减少跨拥塞域的跳数。
 
 ### RoCE 环境的常见故障
 
@@ -149,7 +166,7 @@ Oversubscription:
 ```bash
 # 设备选择
 export NCCL_IB_HCA=mlx5_0,mlx5_1,mlx5_2,mlx5_3  # 使用哪些网卡
-export NCCL_SOCKET_IFNAME=eth0                      # 管理面网口
+export NCCL_SOCKET_IFNAME=eth0                      # 指定 socket 通信使用的网口
 export NCCL_NET_GDR_LEVEL=5                         # GPUDirect RDMA 级别
 
 # 算法和协议
@@ -160,9 +177,20 @@ export NCCL_PROTO=Simple         # Simple / LL / LL128
 export NCCL_DEBUG=INFO           # 输出连接信息和算法选择
 export NCCL_DEBUG_SUBSYS=ALL     # 输出所有子系统日志
 
-# 超时
-export NCCL_TIMEOUT=1800000      # 超时毫秒数（默认 ~5 分钟，大集群可能不够）
+# 排障时常见的相关设置
+# 具体 timeout 更常在训练框架或 torch.distributed 层配置，不建议把它当成万能修复手段
 ```
+
+### 网络排障的先后顺序
+
+不要一开始就改 NCCL 环境变量。更高效的顺序通常是：
+
+1. 先验证链路是否健康：`ibstat`、`show_gids`、交换机端口错误计数。
+2. 再验证 RDMA 带宽是否接近预期：`ib_write_bw`、`ib_read_bw`。
+3. 然后验证 NCCL 集合通信：`nccl-tests`。
+4. 最后才调整 NCCL 算法、协议、rail 绑定和框架参数。
+
+否则很容易把网络故障误判成 NCCL 参数问题。
 
 ## 常见问题
 

@@ -78,7 +78,7 @@ $$\text{Arithmetic Intensity} = \frac{\text{FLOPs（浮点运算次数）}}{\tex
 - **AI 低 → Memory-bound（带宽瓶颈）**：每搬一堆数据只做了很少的运算。GPU 计算单元大部分时间在等数据。大部分 LLM 推理操作（LayerNorm、Softmax、逐元素运算、decode 阶段的 Attention）都属于此类。
 - **AI 高 → Compute-bound（算力瓶颈）**：数据搬进来后被反复使用，计算单元满负荷运转。训练中的大矩阵乘法（GEMM）通常属于此类。
 
-**H100 的临界点**：H100 的 BF16 算力 ~1979 TFLOPS / HBM 带宽 3350 GB/s ≈ **590 FLOPs/Byte**。这意味着如果你的 kernel 每读 1 byte 做不到 590 次运算，它就是 memory-bound 的。实际上大部分操作都远低于这个数字——所以**优化 AI 系统在很大程度上就是在优化内存访问**。
+**H100 的临界点**：这里要先说明口径。H100 常见资料里的 **1979 TFLOPS** 是带 2:4 结构化稀疏时的 BF16/FP16 峰值；如果按 dense BF16 峰值估算，常见口径约是 **989 TFLOPS**。因此 H100 的 roofline 临界点大致在 **295 FLOPs/Byte（dense）** 到 **590 FLOPs/Byte（sparse 宣传口径）** 之间。做性能分析时必须先说明你用的是哪种峰值口径；而无论哪种口径，结论都一样：大部分 AI kernel 仍然远低于这个数字，所以**优化 AI 系统在很大程度上就是在优化内存访问**。
 
 ### Roofline Model：一张图看清瓶颈
 

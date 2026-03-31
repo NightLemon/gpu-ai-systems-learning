@@ -162,9 +162,10 @@ vllm serve <model> \
     
     # 优化
     --enable-prefix-caching \          # 前缀缓存
-    --use-v2-block-manager \           # 新版 block manager
     --enable-chunked-prefill            # 分块 prefill
 ```
+
+> 注：vLLM 的 CLI 参数变化较快，部署时应始终以当前版本的 `vllm serve --help` 和官方文档为准。
 
 ### 性能指标
 
@@ -174,10 +175,10 @@ vllm serve <model> \
   TPOT (Time per Output Token): 每 token 生成时间（生成速度）
   Throughput (tokens/s):        系统总吞吐量
   
-vLLM vs HuggingFace 原生推理 (LLaMA 7B, A100):
-  Throughput: ~14-24x 提升 (取决于并发)
-  TTFT:       略有增加 (调度开销)
-  TPOT:       相近 (单请求) → 大量改善 (高并发时)
+vLLM vs HuggingFace Transformers 原生服务:
+  Throughput: 高并发下通常可获得显著提升，具体倍数强依赖模型、输入输出长度、并发和 baseline
+  TTFT:       可能因调度和 batching 策略略有波动
+  TPOT:       单请求下未必显著领先，但高并发时通常更有优势
 ```
 
 ## 常见问题
@@ -198,7 +199,7 @@ A: 默认 16 tokens。更大的 block → 更少的 page table 开销但更多�
 
 **Q: vLLM 支持多模态模型吗？**
 
-A: 支持。vLLM 0.4+ 支持 LLaVA 等视觉语言模型，处理图片输入的 embedding。
+A: 支持，而且当前能力已不止早期的 LLaVA 一类示例。多模态支持、支持的模型列表和启动参数都迭代很快，实际使用时应直接查对应版本的官方文档和模型兼容列表。
 
 ## 延伸阅读
 

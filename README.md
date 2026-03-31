@@ -6,6 +6,7 @@
 
 | 章节 | 主题 | 难度 | 说明 |
 |------|------|------|------|
+| [00-industry-overview](00-industry-overview/) | LLM 行业全景 | ⭐ | 数据规模、团队结构、成本与商业模型 |
 | [01-computer-architecture](01-computer-architecture/) | 计算机体系结构 | ⭐⭐ | 精简回顾 + HPC 视角补充 |
 | [02-gpu-architecture](02-gpu-architecture/) | GPU 架构 | ⭐⭐⭐ | **重点** — 理解 GPU 硬件是一切优化的基础 |
 | [03-cuda-programming](03-cuda-programming/) | CUDA 编程 | ⭐⭐⭐ | **重点** — 从入门到 GEMM 优化实战 |
@@ -21,7 +22,8 @@
 
 ```mermaid
 graph LR
-    A[01 体系结构] --> B[02 GPU 架构]
+    Z[00 行业全景] --> A[01 体系结构]
+    A --> B[02 GPU 架构]
     B --> C[03 CUDA 编程]
     B --> D[04 Transformer]
     D --> E[05 训练基础]

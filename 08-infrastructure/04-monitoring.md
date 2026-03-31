@@ -81,7 +81,8 @@ def compute_mfu(model_params, tokens_per_step, step_time,
     gpu_count: GPU 数量
     gpu_peak_flops: 单卡峰值 FLOPS (H100 BF16 = 1979e12)
     """
-    # 6P 近似: forward ~2P + backward ~4P per token
+    # 6P 近似只适用于 dense Transformer 的粗略估算。
+    # 实际值会受 attention、激活重算、MoE、序列并行等因素影响。
     flops_per_step = 6 * model_params * tokens_per_step
     achieved_flops = flops_per_step / step_time
     peak_flops = gpu_count * gpu_peak_flops
@@ -106,6 +107,12 @@ class MFUTracker:
         print(f"MFU: {mfu:.1%} | Step: {step_time:.2f}s | "
               f"Tokens/s: {tokens/step_time:.0f}")
 ```
+
+MFU 很有用，但不要把它当成唯一真理：
+
+- 不同模型结构下，MFU 的可比性有限
+- attention、MoE、重算和 padding 都会影响这个近似
+- 它更适合用来观察同一训练配置的趋势，而不是跨项目直接横比
 
 ## 性能排障工具链
 
@@ -153,6 +160,22 @@ graph TD
     H --> H1[检查 batch size 是否太小]
     H --> H2[检查是否有 non-fused 小 kernel]
 ```
+
+### 一个更实用的排障 runbook
+
+当训练“变慢了”时，先按下面顺序收窄问题：
+
+1. **先看是不是所有 rank 都慢**
+  如果只有个别 rank 慢，优先怀疑 straggler、热降频、NUMA 不亲和或单节点网络异常。
+
+2. **再看慢的是计算、通信还是 IO**
+  结合 step log、GPU util、NCCL 时间线、DataLoader 占比做一轮分类，不要一上来就抓 profiler 全量 trace。
+
+3. **再决定用哪类工具深挖**
+  算子问题用 PyTorch Profiler / Nsight Compute，通信问题用 nccl-tests / Nsight Systems，系统问题用 DCGM / 节点监控。
+
+4. **最后再改参数**
+  很多团队会先改 batch size、NCCL 参数或 DataLoader workers，但如果根因是坏卡、坏链路或共享存储抖动，这些调参只会掩盖问题。
 
 ### 典型故障案例
 
