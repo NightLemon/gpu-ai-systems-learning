@@ -30,7 +30,7 @@ jobs:
       - name: Prepare docs directory
         run: |
           mkdir -p docs
-          for item in README.md REVIEW-2026-03-24.md 0*/ resources/ javascripts/; do
+          for item in README.md REVIEW-2026-03-24.md 0*/ resources/ javascripts/ stylesheets/; do
             [ -e "$item" ] && cp -r "$item" docs/
           done
 
