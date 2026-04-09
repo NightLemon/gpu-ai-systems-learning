@@ -2,8 +2,6 @@ site_name: GPU & AI Systems 学习指南
 site_url: https://nightlemon.github.io/gpu-ai-systems-learning/
 repo_url: https://github.com/NightLemon/gpu-ai-systems-learning
 repo_name: NightLemon/gpu-ai-systems-learning
-docs_dir: .
-site_dir: .site
 
 theme:
   name: material
