@@ -43,8 +43,8 @@ Prompt: "The capital of France is"
   H100 带宽: 3.35 TB/s
   → 理论最快: 14 GB / 3.35 TB/s = 4.2 ms/token = ~240 tokens/s (单请求)
   
-  H100 算力: 1979 TFLOPS
-  → 计算时间: ~0.04 ms (远小于读权重时间)
+  H100 BF16 dense 算力: ~989 TFLOPS（1979 TFLOPS 常见于结构化稀疏口径）
+  → 计算时间: 仍远小于读权重时间
   
   → Decode 阶段是严重的 Memory-bound!
   → 优化方向: 减少权重大小（量化）、减少读取次数（batching）、减少 KV 缓存（PagedAttention）

@@ -79,7 +79,7 @@ def compute_mfu(model_params, tokens_per_step, step_time,
     tokens_per_step: 每步处理的 token 数 (batch_size × seq_len)
     step_time: 每步耗时（秒）
     gpu_count: GPU 数量
-    gpu_peak_flops: 单卡峰值 FLOPS (H100 BF16 = 1979e12)
+    gpu_peak_flops: 单卡峰值 FLOPS。H100 BF16 dense 约 989e12；1979e12 常见于结构化稀疏口径
     """
     # 6P 近似只适用于 dense Transformer 的粗略估算。
     # 实际值会受 attention、激活重算、MoE、序列并行等因素影响。

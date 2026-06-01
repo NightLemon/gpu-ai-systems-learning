@@ -1,6 +1,6 @@
 # vLLM 架构
 
-> PagedAttention + Continuous Batching + 高效调度——目前最流行的开源 LLM 推理引擎。
+> PagedAttention + Continuous Batching + 高效调度——当前主流的开源 LLM 推理引擎之一。vLLM 迭代很快，CLI、默认调度策略和模型支持请以当前版本文档为准。
 
 ## 核心概念
 
@@ -15,7 +15,7 @@
   显存碎片严重，能服务的并发请求少
 
 PagedAttention: KV-Cache 以固定大小的 Block (Page) 分配
-  Block Size = 16 tokens
+  Block Size = 16 tokens  # 示例值，实际默认/可选值以当前版本为准
 
   Request A (500 tokens): Page[0] → Page[1] → ... → Page[31]  (32 pages)
   Request B (200 tokens): Page[0] → Page[1] → ... → Page[12]  (13 pages)
@@ -81,8 +81,8 @@ PagedAttention: Q × K_paged^T → softmax → × V_paged
 ### 使用方式
 
 ```python
-# 启动 vLLM serving
-# vllm serve meta-llama/Llama-2-7b-hf \
+# 启动 vLLM serving（模型可以换成当前可公开下载、且显存放得下的 checkpoint）
+# vllm serve Qwen/Qwen2.5-7B-Instruct \
 #     --tensor-parallel-size 2 \
 #     --max-model-len 4096 \
 #     --gpu-memory-utilization 0.9
@@ -91,7 +91,7 @@ PagedAttention: Q × K_paged^T → softmax → × V_paged
 from vllm import LLM, SamplingParams
 
 llm = LLM(
-    model="meta-llama/Llama-2-7b-hf",
+    model="Qwen/Qwen2.5-7B-Instruct",
     tensor_parallel_size=2,
     max_model_len=4096,
     gpu_memory_utilization=0.9,
@@ -129,7 +129,7 @@ Request B: "You are a helpful assistant. User: What is ML?"
 ```
 当显存不足以容纳所有请求的 KV-Cache:
 
-策略 1: Swap (默认)
+策略 1: Swap / Offload
   将低优先级请求的 KV-Cache 从 GPU 换到 CPU
   GPU 显存释放 → 处理高优先级请求
   之后再换回来继续生成
@@ -138,6 +138,8 @@ Request B: "You are a helpful assistant. User: What is ML?"
   丢弃低优先级请求的 KV-Cache
   之后重新 prefill（重计算代替 swap 的 PCIe 带宽消耗）
 ```
+
+> 注：具体默认策略和可用参数随 vLLM 版本变化。遇到抢占频繁时，不要只调一个参数，要同时看请求长度分布、`max_num_batched_tokens`、KV cache 水位和是否启用 chunked prefill。
 
 ### 关键配置参数
 
@@ -195,7 +197,7 @@ vLLM vs HuggingFace Transformers 原生服务:
 
 **Q: PagedAttention 的 Block Size 选多大？**
 
-A: 默认 16 tokens。更大的 block → 更少的 page table 开销但更多显存浪费（最后一个 block 可能没填满）。更小的 block → 更细粒度的内存管理但 page table 更大。16 是一个不错的平衡。
+A: 很多配置会以 16 tokens 作为示例或常见取值，但不要把它当成跨版本不变的事实。更大的 block → 更少的 page table 开销但更多显存浪费（最后一个 block 可能没填满）；更小的 block → 更细粒度的内存管理但 page table 更大。实际部署前先看当前 `vllm serve --help` 和目标 GPU 的限制。
 
 **Q: vLLM 支持多模态模型吗？**
 
@@ -213,7 +215,7 @@ A: 支持，而且当前能力已不止早期的 LLaVA 一类示例。多模态�
 
 | 术语 | 说明 |
 |------|------|
-| **vLLM** | 当前最流行的开源 LLM 推理引擎，核心创新是 PagedAttention |
+| **vLLM** | 主流开源 LLM 推理引擎之一，核心创新是 PagedAttention 和围绕 KV cache 的调度/内存管理 |
 | **PagedAttention** | 借鉴 OS 虚拟内存的分页机制管理 KV-Cache，按固定大小的 Block 按需分配，消除显存碎片 |
 | **Block Table（页表）** | 记录每个请求的 KV-Cache 分布在哪些物理 Block 上的映射表 |
 | **Prefix Caching** | 多个请求共享相同的 prompt 前缀时，复用其 KV-Cache Block，避免重复计算 |

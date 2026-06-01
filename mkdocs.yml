@@ -55,7 +55,7 @@ extra_css:
 
 extra_javascript:
   - javascripts/mathjax.js
-  - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
+  - https://cdn.jsdelivr.net/npm/mathjax@4.1.2/tex-mml-chtml.js
 
 nav:
   - 首页: README.md
@@ -94,6 +94,7 @@ nav:
     - 5.2 梯度检查点: 05-training-fundamentals/02-gradient-checkpointing.md
     - 5.3 数据加载: 05-training-fundamentals/03-data-loading.md
     - 5.4 Profiling: 05-training-fundamentals/04-profiling.md
+    - 5.5 PyTorch 内部机制: 05-training-fundamentals/05-pytorch-internals.md
   - Ch06 分布式训练:
     - 概述: 06-distributed-training/README.md
     - 6.1 通信原语: 06-distributed-training/01-communication-primitives.md
@@ -120,6 +121,7 @@ nav:
     - 8.2 存储系统: 08-infrastructure/02-storage-systems.md
     - 8.3 K8s GPU 调度: 08-infrastructure/03-kubernetes-gpu.md
     - 8.4 监控: 08-infrastructure/04-monitoring.md
+    - 8.5 高级调试手册: 08-infrastructure/05-debugging-runbook.md
   - Ch09 实战项目:
     - 概述: 09-hands-on-projects/README.md
     - 环境搭建: 09-hands-on-projects/00-environment-setup.md
@@ -127,6 +129,7 @@ nav:
     - 项目2 多卡训练: 09-hands-on-projects/02-multi-gpu-training.md
     - 项目3 推理服务: 09-hands-on-projects/03-inference-serving.md
   - 资源:
+    - 版本基线: resources/version-baseline.md
     - 书籍: resources/books.md
     - 课程: resources/courses.md
     - 论文: resources/papers.md

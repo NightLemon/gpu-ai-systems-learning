@@ -6,17 +6,19 @@
 
 | 章节 | 主题 | 难度 | 说明 |
 |------|------|------|------|
-| [00-industry-overview](00-industry-overview/) | LLM 行业全景 | ⭐ | 数据规模、团队结构、成本与商业模型 |
-| [01-computer-architecture](01-computer-architecture/) | 计算机体系结构 | ⭐⭐ | 精简回顾 + HPC 视角补充 |
-| [02-gpu-architecture](02-gpu-architecture/) | GPU 架构 | ⭐⭐⭐ | **重点** — 理解 GPU 硬件是一切优化的基础 |
-| [03-cuda-programming](03-cuda-programming/) | CUDA 编程 | ⭐⭐⭐ | **重点** — 从入门到 GEMM 优化实战 |
-| [04-transformer-deep-dive](04-transformer-deep-dive/) | Transformer 深入 | ⭐⭐ | 模型架构 + 计算/显存分析 |
-| [05-training-fundamentals](05-training-fundamentals/) | 训练基础 | ⭐⭐ | 混合精度、Checkpointing、Profiling |
-| [06-distributed-training](06-distributed-training/) | 分布式训练 | ⭐⭐⭐ | **重点** — 通信原语到多机训练框架 |
-| [07-inference-optimization](07-inference-optimization/) | 推理优化 | ⭐⭐⭐ | **重点** — KV-cache 到 vLLM/TensorRT-LLM |
-| [08-infrastructure](08-infrastructure/) | 基础设施 | ⭐⭐ | 集群网络、存储、K8s GPU 调度 |
-| [09-hands-on-projects](09-hands-on-projects/) | 实战项目 | ⭐⭐⭐ | 动手练习指南 |
-| [resources](resources/) | 资源汇总 | — | 书籍、论文、课程、工具 |
+| [00-industry-overview](00-industry-overview/README.md) | LLM 行业全景 | ⭐ | 数据规模、团队结构、成本与商业模型 |
+| [01-computer-architecture](01-computer-architecture/README.md) | 计算机体系结构 | ⭐⭐ | 精简回顾 + HPC 视角补充 |
+| [02-gpu-architecture](02-gpu-architecture/README.md) | GPU 架构 | ⭐⭐⭐ | **重点** — 理解 GPU 硬件是一切优化的基础 |
+| [03-cuda-programming](03-cuda-programming/README.md) | CUDA 编程 | ⭐⭐⭐ | **重点** — 从入门到 GEMM 优化实战 |
+| [04-transformer-deep-dive](04-transformer-deep-dive/README.md) | Transformer 深入 | ⭐⭐ | 模型架构 + 计算/显存分析 |
+| [05-training-fundamentals](05-training-fundamentals/README.md) | 训练基础 | ⭐⭐ | 混合精度、Checkpointing、Profiling |
+| [06-distributed-training](06-distributed-training/README.md) | 分布式训练 | ⭐⭐⭐ | **重点** — 通信原语到多机训练框架 |
+| [07-inference-optimization](07-inference-optimization/README.md) | 推理优化 | ⭐⭐⭐ | **重点** — KV-cache 到 vLLM/TensorRT-LLM |
+| [08-infrastructure](08-infrastructure/README.md) | 基础设施 | ⭐⭐ | 集群网络、存储、K8s GPU 调度 |
+| [09-hands-on-projects](09-hands-on-projects/README.md) | 实战项目 | ⭐⭐⭐ | 动手练习指南 |
+| [resources](resources/version-baseline.md) | 资源汇总 | — | 版本基线、书籍、论文、课程、工具 |
+
+> 版本说明：容易过期的框架接口、CLI 和性能结论以 [版本基线](resources/version-baseline.md) 为准；部署前请再次核对官方文档和当前版本的 `--help` 输出。
 
 ## 🗺️ 学习路线图
 
@@ -81,4 +83,4 @@ graph LR
 
 ## License
 
-[MIT](LICENSE)
+[MIT](https://github.com/NightLemon/gpu-ai-systems-learning/blob/master/LICENSE)

@@ -33,8 +33,8 @@
 
 | 项目 | 说明 | 链接 |
 |------|------|------|
-| **AutoGPTQ** | GPTQ 量化工具 | [GitHub](https://github.com/AutoGPTQ/AutoGPTQ) |
-| **AutoAWQ** | AWQ 量化工具 | [GitHub](https://github.com/casper-hansen/AutoAWQ) |
+| **GPTQModel** | GPTQ 量化工具，vLLM 当前文档重点覆盖的 GPTQ 路线之一 | [GitHub](https://github.com/ModelCloud/GPTQModel) |
+| **AutoAWQ** | AWQ 量化工具；使用前确认当前维护状态和 serving 框架支持 | [GitHub](https://github.com/casper-hansen/AutoAWQ) |
 | **bitsandbytes** | INT8/NF4 量化 (QLoRA) | [GitHub](https://github.com/TimDettmers/bitsandbytes) |
 
 ## Profiling 工具

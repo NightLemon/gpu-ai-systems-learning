@@ -45,14 +45,14 @@ $$\text{KV-Cache size} = 2 \times L \times H \times S \times D \times B$$
 - $B$ = Batch Size
 
 ```
-LLaMA 2 7B (FP16):
+7B MHA-style 模型 (FP16):
   L=32, H=32 (MHA), D=128, S=4096, B=1
   KV-Cache = 2 × 32 × 32 × 4096 × 128 × 2 bytes = 2 GB per request!
 
-LLaMA 2 7B (FP16) with GQA (H_kv=8):
+7B GQA-style 模型 (FP16, H_kv=8):
   KV-Cache = 2 × 32 × 8 × 4096 × 128 × 2 bytes = 512 MB per request
 
-LLaMA 3 70B (FP16, GQA H_kv=8):
+Llama 3 70B 量级模型 (FP16, GQA H_kv=8):
   L=80, D=128, S=8192
   KV-Cache = 2 × 80 × 8 × 8192 × 128 × 2 bytes = 2.56 GB per request
   
@@ -74,7 +74,7 @@ GQA (Grouped Query Attention):  Q head 分组，每组共享一组 K,V
   Q heads = 32, KV heads = 8 (每 4 个 Q head 共享)
   KV-Cache ∝ 8 (减少 4x)
 
-→ GQA 是目前的主流选择（LLaMA 2 70B, LLaMA 3, Mistral 等）
+→ GQA 是目前的主流选择（Llama 2 70B、Llama 3、Mistral 等模型家族都采用或部分采用类似思路）
 → 在 KV-Cache 节省和模型质量之间取得平衡
 ```
 

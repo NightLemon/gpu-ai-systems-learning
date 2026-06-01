@@ -8,7 +8,7 @@
 
 既然瓶颈在带宽，那减少需要读取的数据量就能直接加速。量化就是这个思路：把权重从 FP16（2 bytes/参数）压缩到 INT4（0.5 bytes/参数），模型体积变为 1/4，需要从显存读取的数据也变为 1/4。
 
-当然代价是精度损失——但现代量化方法（GPTQ、AWQ 等）能在 INT4 下把质量损失控制在几乎不可感知的范围内。这是目前生产环境推理部署中最广泛使用的优化手段。
+当然代价是精度损失——GPTQ、AWQ、FP8 等现代量化方法能把很多模型的质量损失控制在可接受范围内，但必须用目标任务和真实 prompt 做回归评估。这是生产环境推理部署中最常见的优化手段之一。
 
 ## 核心概念
 
@@ -75,7 +75,7 @@ INT4 范围: -8 ~ 7, 只有 16 个值
 计算: INT8 × INT8 → INT32 → FP16（Tensor Core 加速）
 
 优点:
-  - 计算速度翻倍（INT8 GEMM 比 FP16 快 ~2x）
+  - 在合适硬件和矩阵形状上，INT8 GEMM 有明显吞吐优势
   - Prefill 和 Decode 都加速
 
 缺点:
@@ -93,7 +93,7 @@ INT4 范围: -8 ~ 7, 只有 16 个值
 | **GPTQ** | W4A16 | ★★★ | 校准集 | 较快 | 逐层误差最小化 |
 | **AWQ** | W4A16 | ★★★★ | 校准集 | 快 | 保护重要权重不量化 |
 | **SmoothQuant** | W8A8 | ★★★★ | 校准集 | 快 | 将激活值的难度转移到权重 |
-| **FP8** | W8A8 | ★★★★★ | 否/少量 | 最快 | Hopper 原生支持 |
+| **FP8** | W8A8 | ★★★★★ | 少量/视 recipe 而定 | 很快 | Hopper+ 原生支持 |
 | **QAT/QLORA** | W4A16 | ★★★★ | 训练 | 慢 | 量化感知训练 |
 
 ### GPTQ
@@ -139,10 +139,10 @@ Hopper (H100) 原生支持 FP8 Tensor Core:
   E5M2: 5-bit 指数 + 2-bit 尾数 → 范围 ±57344, 精度适合梯度
 
 FP8 vs INT8:
-  FP8: 不需要 zero_point，scale 更容易设置
-  INT8: 均匀量化，对 outliers 不友好
+  FP8: 不需要 zero_point，scale 设计更接近浮点格式
+  INT8: 均匀量化，对 outliers 更敏感
   
-  FP8 通常精度更好，且 Hopper 硬件原生支持
+  哪个精度更好取决于 recipe、校准数据、模型和任务；Hopper+ 原生支持 FP8 Tensor Core
 ```
 
 ### SmoothQuant — 让 W8A8 可行
@@ -166,31 +166,32 @@ SmoothQuant:
 ## 代码示例
 
 ```python
-# 使用 AutoGPTQ 量化
-from auto_gptq import AutoGPTQForCausalLM, BaseQuantizeConfig
+# 离线量化包的 API 变化较快，下面只展示核心流程。
+# 生产 serving 更常见的做法是直接选择当前 vLLM/TRT-LLM 支持的量化 checkpoint。
+from gptqmodel import GPTQModel, QuantizeConfig
 
-quantize_config = BaseQuantizeConfig(
+quantize_config = QuantizeConfig(
     bits=4,              # INT4 量化
     group_size=128,      # Per-group 量化
-    desc_act=False,      # 不按激活值排序（更快）
 )
 
 # 加载并量化
-model = AutoGPTQForCausalLM.from_pretrained(
-    "meta-llama/Llama-2-7b-hf",
-    quantize_config=quantize_config,
-)
-model.quantize(calibration_data)  # 需要少量校准数据
-model.save_quantized("llama-2-7b-gptq-int4")
+model = GPTQModel.load("<model-id>", quantize_config)
+model.quantize(calibration_data)  # 需要少量校准数据，格式按包文档准备
+model.save("<model-id>-gptq-int4")
 
 # 使用 AWQ
 from awq import AutoAWQForCausalLM
 
-model = AutoAWQForCausalLM.from_pretrained("meta-llama/Llama-2-7b-hf")
+model = AutoAWQForCausalLM.from_pretrained("<model-id>")
 model.quantize(
     tokenizer,
     quant_config={"w_bit": 4, "q_group_size": 128, "version": "GEMM"},
 )
+
+# vLLM serving 示例（需要选择对应格式的量化 checkpoint）
+# vllm serve <awq-model-id> --quantization awq
+# vllm serve <gptq-model-id> --quantization gptq
 ```
 
 ## 常见问题

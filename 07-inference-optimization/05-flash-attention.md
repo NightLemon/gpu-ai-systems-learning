@@ -1,6 +1,6 @@
 # FlashAttention
 
-> 一种 IO-aware（显式考虑显存读写开销）的 Attention 算法。标准 Attention 会将 N×N 的中间矩阵写入显存（HBM），FlashAttention 通过分块（Tiling）将计算保持在片上高速存储（SRAM）中完成，避免大量 HBM 读写，实现 2-4x 加速 + 显存线性下降。
+> 一种 IO-aware（显式考虑显存读写开销）的 Attention 算法。标准 Attention 会将 N×N 的中间矩阵写入显存（HBM），FlashAttention 通过分块（Tiling）将计算保持在片上高速存储（SRAM）中完成，避免大量 HBM 读写。加速幅度取决于 GPU、dtype、head_dim、序列长度和实现版本。
 
 ## 为什么 FlashAttention 能同时又快又省？
 
@@ -64,10 +64,10 @@ for each Q_block (大小 Br × d):     ← 外层循环
 ### 效果
 
 ```
-HBM 读写量: O(N² d² / M)  (M = SRAM 大小)
-  vs 标准: O(N² + Nd)
+HBM 读写量: 显著低于标准 Attention
+  关键不是少算 FLOPs，而是避免把 N×N 中间矩阵反复写回 HBM
   
-  实际: FlashAttention 在 A100 上快 2-4x
+  实际加速: 取决于 GPU、dtype、head_dim、序列长度、batch 和实现版本
 
 显存: O(N)  (只存 O, logsumexp, 不存 N×N 矩阵)
   vs 标准: O(N²)
@@ -79,11 +79,11 @@ HBM 读写量: O(N² d² / M)  (M = SRAM 大小)
 
 ### FlashAttention v1 vs v2 vs v3
 
-| 版本 | 关键改进 | 加速 |
-|------|---------|------|
-| **v1** | 基本 tiling + online softmax | 2-4x vs standard |
-| **v2** | 优化 warp 分配（减少非 GEMM 操作），backward 优化 | 对 v1 再快 2x |
-| **v3** (Hopper) | 利用 Hopper 异步特性（TMA、wgmma），FP8 支持 | 对 v2 再快 1.5-2x |
+| 版本 | 关键改进 | 使用时注意 |
+|------|---------|-----------|
+| **v1** | 基本 tiling + online softmax | 建立 IO-aware attention 的基本思路 |
+| **v2** | 优化 warp 分配（减少非 GEMM 操作），backward 优化 | PyPI 稳定包生态主要围绕 v2 展开 |
+| **v3** (Hopper) | 利用 Hopper 异步特性（TMA、wgmma），FP8 支持 | 主要面向 H100/H800 等 Hopper GPU，使用方式以项目 README 为准 |
 
 ### 为什么 FlashAttention 快？Roofline 分析
 
@@ -105,16 +105,13 @@ FlashAttention:
 ### 实际使用
 
 ```python
-# PyTorch 2.0+ 内置
+# PyTorch 2.x 内置 SDPA，会按条件选择 flash / memory-efficient / math 后端
 import torch
 import torch.nn.functional as F
+from torch.nn.attention import SDPBackend, sdpa_kernel
 
-# 自动使用 FlashAttention（如果满足条件）
-with torch.backends.cuda.sdp_kernel(
-    enable_flash=True,      # FlashAttention
-    enable_math=False,       # 禁用标准数学实现
-    enable_mem_efficient=False  # 禁用 memory-efficient attention
-):
+# 强制只尝试 FlashAttention 后端；如果条件不满足会报错或回退失败
+with sdpa_kernel(SDPBackend.FLASH_ATTENTION):
     output = F.scaled_dot_product_attention(q, k, v, attn_mask=None, is_causal=True)
 
 # 或者直接调用（PyTorch 2.0+ 会自动选择最优实现）
@@ -129,13 +126,13 @@ output = flash_attn_func(q, k, v, causal=True)
 ### FlashAttention 的使用条件
 
 ```
-必须满足:
-  - GPU: Ampere (A100) 及以上 (需要 SM80+)
-  - dtype: FP16 或 BF16（不支持 FP32）
-  - head_dim: 通常 ≤ 256
+必须满足（不同入口的细节会变）:
+  - GPU / CUDA / PyTorch / flash-attn 版本组合支持对应后端
+  - dtype 通常是 FP16 或 BF16；FP32 一般不会走 FlashAttention kernel
+  - head_dim、mask、dropout、causal 等参数满足当前实现约束
 
 不支持/需要特殊处理:
-  - 自定义 attention mask（v2 支持部分自定义 mask）
+  - 自定义 attention mask（支持范围取决于 PyTorch SDPA 或 flash-attn 版本）
   - 需要 attention scores（FlashAttention 不输出 N×N 矩阵）
   - Cross-attention（支持，但 Q 和 KV 序列长度不同时有限制）
 ```
@@ -144,7 +141,7 @@ output = flash_attn_func(q, k, v, causal=True)
 
 **Q: PyTorch 的 `scaled_dot_product_attention` 和 `flash-attn` 包有什么区别？**
 
-A: PyTorch 内置的 SDPA 可以自动选择 FlashAttention、Memory-Efficient Attention 或普通数学实现。`flash-attn` 包通常更新更快，支持更多特性（如 variable-length sequences、alibi positional encoding 等）。性能上 `flash-attn` 往往略优。
+A: PyTorch 内置的 SDPA 是稳定入口，可以自动选择 FlashAttention、Memory-Efficient Attention 或普通数学实现，也能用 `sdpa_kernel` 限制后端。`flash-attn` 包通常更快暴露新 kernel 和特性（例如不同变长序列路径、Hopper 优化），但安装和版本匹配成本更高。性能优劣要按当前 PyTorch、CUDA、GPU 和输入形状实测。
 
 **Q: FlashAttention 对训练和推理都有效吗？**
 

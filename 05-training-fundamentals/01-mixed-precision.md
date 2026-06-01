@@ -18,8 +18,8 @@
 FP32:  1 sign + 8 exponent + 23 mantissa  → 范围大、精度高、慢
 FP16:  1 sign + 5 exponent + 10 mantissa  → 范围小、容易溢出、快
 BF16:  1 sign + 8 exponent + 7 mantissa   → 范围和FP32一样、精度低、快
-TF32:  1 sign + 8 exponent + 10 mantissa  → A100 Tensor Core 专用
-FP8:   E4M3 (4+3) 或 E5M2 (5+2)          → H100+ 支持, 最快
+TF32:  1 sign + 8 exponent + 10 mantissa  → Ampere+ Tensor Core 可加速部分 FP32 matmul
+FP8:   E4M3 (4+3) 或 E5M2 (5+2)          → Hopper+ 支持，需结合量化策略和精度回归使用
 ```
 
 **BF16 是目前大模型训练的首选**——范围和 FP32 一致（不需要 loss scaling），精度够用。
@@ -106,7 +106,7 @@ A: 需要分版本和后端来看。旧接口里，`torch.backends.cuda.matmul.a
 | **混合精度（Mixed Precision）** | 前向/反向传播用低精度（FP16/BF16）加速，参数更新用 FP32 保证数值稳定性 |
 | **FP32 / FP16 / BF16** | 32/16/16 位浮点格式。BF16 和 FP32 数值范围相同（指数位相同）但精度较低，是大模型训练的首选 |
 | **TF32** | TensorFloat-32，NVIDIA 定义的格式，8 位指数 + 10 位尾数。A100+ 的 Tensor Core 可用它加速部分 FP32 矩阵运算；具体默认行为取决于 PyTorch 版本和后端设置 |
-| **FP8** | 8 位浮点格式（E4M3 或 E5M2），H100+ 原生支持，速度最快但精度最低 |
+| **FP8** | 8 位浮点格式（E4M3 或 E5M2），Hopper+ 原生支持；吞吐潜力高，但需要校准、scale 管理和任务级精度回归 |
 | **Loss Scaling** | 将 loss 乘以一个缩放因子后再反向传播，防止 FP16 梯度因太小而变成零（underflow）。BF16 不需要 |
 | **AMP** | Automatic Mixed Precision，PyTorch 提供的自动混合精度训练接口。新代码更推荐使用 `torch.amp` |
 | **GradScaler** | PyTorch AMP 中的动态 Loss Scaling 管理器，自动调整缩放因子 |

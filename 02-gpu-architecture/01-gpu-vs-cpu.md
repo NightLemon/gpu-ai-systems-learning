@@ -39,7 +39,7 @@ CPU: 少量强大的核心，复杂控制逻辑          GPU: 大量简单的核
 | 核心数 | 60 cores | 132 SM × 128 CUDA Cores = 16,896 |
 | 时钟频率 | ~3.0-4.8 GHz | ~1.6-1.8 GHz |
 | FP32 峰值算力 | ~5 TFLOPS | ~67 TFLOPS |
-| FP16 Tensor 算力 | — | ~1,979 TFLOPS |
+| FP16/BF16 Tensor 算力 | — | ~989 TFLOPS dense（~1,979 TFLOPS sparse 口径） |
 | 内存带宽 | ~300 GB/s (DDR5) | ~3,350 GB/s (HBM3) |
 | 内存容量 | 数百 GB - TB | 80 GB |
 | 单线程性能 | **极强** | 弱 |
@@ -155,7 +155,7 @@ A: GPU 核心非常简单，没有复杂的分支预测和乱序执行能力。�
 
 **Q: 什么是 Tensor Core？和 CUDA Core 有什么区别？**
 
-A: CUDA Core 执行标量浮点运算（每周期 1 个 FMA），Tensor Core 执行小矩阵乘法（如 4×4 FMA），单条指令完成的计算量远大于 CUDA Core。这就是为什么 H100 的 Tensor Core FP16 算力（1979 TFLOPS）远高于 CUDA Core FP32 算力（67 TFLOPS）。现代深度学习几乎完全依赖 Tensor Core。
+A: CUDA Core 执行标量浮点运算（每周期 1 个 FMA），Tensor Core 执行小矩阵乘法（如 MMA 指令），单条指令完成的计算量远大于 CUDA Core。这就是为什么 H100 的 Tensor Core BF16/FP16 dense 峰值约 989 TFLOPS，远高于 CUDA Core FP32 峰值约 67 TFLOPS；如果按 2:4 结构化稀疏口径，宣传数值还会翻倍。现代深度学习几乎完全依赖 Tensor Core。
 
 **Q: HBM 和 GDDR 有什么区别？**
 

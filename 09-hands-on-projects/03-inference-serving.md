@@ -4,13 +4,14 @@
 
 ## 项目目标
 
-部署 LLaMA 2 7B（或同等模型），对比不同配置的性能差异，掌握推理优化调优。
+部署一个 7B 级别或同等规模的开放权重模型，对比不同配置的性能差异，掌握推理优化调优。
 
 ## 环境准备
 
 ```bash
 pip install vllm
-# 模型: 需下载 meta-llama/Llama-2-7b-hf 或使用开放模型
+# 选择一个当前 vLLM 支持、显存放得下、且你有下载权限的模型
+export MODEL=Qwen/Qwen2.5-7B-Instruct
 ```
 
 ## 步骤
@@ -19,25 +20,28 @@ pip install vllm
 
 ```bash
 # 启动 vLLM serving
-vllm serve meta-llama/Llama-2-7b-hf \
+vllm serve "$MODEL" \
     --max-model-len 4096 \
     --gpu-memory-utilization 0.9
 
 # 测试
 curl http://localhost:8000/v1/completions \
     -H "Content-Type: application/json" \
-    -d '{"model": "meta-llama/Llama-2-7b-hf", "prompt": "Hello", "max_tokens": 100}'
+    -d "{\"model\": \"$MODEL\", \"prompt\": \"Hello\", \"max_tokens\": 100}"
 ```
 
 ### Step 2: 压测与 Baseline 指标
 
-```python
-# 用 benchmark 工具测量
-# vLLM 自带 benchmark 脚本
-python -m vllm.entrypoints.openai.api_server &
-
-python benchmarks/benchmark_serving.py \
-    --model meta-llama/Llama-2-7b-hf \
+```bash
+# 用 vLLM 当前 CLI 做 serving benchmark
+# 先保持上一步的 vllm serve 进程运行，再另开终端执行：
+vllm bench serve \
+    --model "$MODEL" \
+    --backend vllm \
+    --base-url http://localhost:8000 \
+    --dataset-name random \
+    --random-input-len 512 \
+    --random-output-len 128 \
     --num-prompts 100 \
     --request-rate 10
 
@@ -48,22 +52,23 @@ python benchmarks/benchmark_serving.py \
 
 ```bash
 # FP16 (baseline)
-vllm serve meta-llama/Llama-2-7b-hf
+vllm serve "$MODEL"
 
 # AWQ INT4
-vllm serve TheBloke/Llama-2-7b-AWQ --quantization awq
+vllm serve <awq-model-id> --quantization awq
 
 # GPTQ INT4
-vllm serve TheBloke/Llama-2-7b-GPTQ --quantization gptq
+vllm serve <gptq-model-id> --quantization gptq
 
 # 对比: 吞吐量、延迟、显存占用、输出质量
+# 量化 checkpoint 与量化后端支持变化较快，部署前查 vLLM quantization 文档和模型卡
 ```
 
 ### Step 4: 调优参数
 
 ```bash
 # 调整 block size
-vllm serve ... --block-size 32  # vs 默认 16
+vllm serve ... --block-size 32  # 与当前默认/限制对比，先看 vllm serve --help
 
 # 开启 prefix caching
 vllm serve ... --enable-prefix-caching

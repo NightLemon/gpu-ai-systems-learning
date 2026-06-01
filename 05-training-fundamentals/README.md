@@ -8,3 +8,4 @@
 | [02-gradient-checkpointing.md](02-gradient-checkpointing.md) | 梯度检查点 | 时间换空间、Selective Checkpoint |
 | [03-data-loading.md](03-data-loading.md) | 数据加载 | DataLoader 优化、Streaming Dataset |
 | [04-profiling.md](04-profiling.md) | 性能分析 | PyTorch Profiler、Nsight Systems |
+| [05-pytorch-internals.md](05-pytorch-internals.md) | PyTorch 内部机制 | torch.compile、Autograd、Dispatcher、显存管理 |

@@ -252,13 +252,15 @@ Arithmetic Intensity: 137.4G / 192M = 716 FLOPs/Byte >> 20
 
 ### 不同精度的 GEMM 性能
 
-| 精度 | H100 峰值 | 典型应用 |
-|------|----------|---------|
-| FP32 | 67 TFLOPS | Legacy |
-| TF32 | 989 TFLOPS | 默认训练精度（PyTorch 自动使用） |
-| FP16/BF16 | 1,979 TFLOPS | 混合精度训练 |
-| FP8 | 3,958 TFLOPS | Hopper+ 训练/推理 |
-| INT8 | 3,958 TOPS | 推理量化 |
+| 精度 | H100 dense 峰值（常见口径） | 典型应用 |
+|------|---------------------------|---------|
+| FP32 | 67 TFLOPS | Legacy / 高精度数值计算 |
+| TF32 | ~494 TFLOPS | FP32 matmul 加速，取决于 PyTorch precision 设置 |
+| FP16/BF16 | ~989 TFLOPS | 混合精度训练 |
+| FP8 | ~1,979 TFLOPS | Hopper+ 训练/推理，需要精度回归 |
+| INT8 | ~1,979 TOPS | 推理量化 |
+
+> 注：NVIDIA 资料中常见的 H100 Tensor Core 峰值还会列出 2:4 结构化稀疏口径，数值通常是 dense 的 2 倍。做 roofline 或 MFU 时必须使用和 workload 对齐的口径。
 
 ## 常见问题
 

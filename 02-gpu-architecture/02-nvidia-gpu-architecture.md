@@ -8,7 +8,7 @@
 
 原因是：**当你优化 CUDA kernel、选择并行策略、排查训练性能问题时，所有决策的底层逻辑都来自硬件限制**。比如：
 - 为什么 Tensor Parallel 通常优先放在机内？→ 因为它通信频繁且时延敏感，机内 NVLink/NVSwitch 往往比跨机网络更合适
-- 为什么 H100 训练 LLM 比 A100 快 3x 而不只是快 50%？→ 因为 Transformer Engine 和 FP8 Tensor Core
+- 为什么 H100 在很多 LLM 训练/推理场景里比 A100 提升远超频率差异？→ 因为 Transformer Engine、FP8 Tensor Core、HBM/NVLink 以及软件栈一起变化
 - 为什么模型推理时显存比算力更容易成为瓶颈？→ 因为 GPU 的 FLOPS 增长远快于 HBM 带宽增长
 
 了解这些硬件特性不需要你成为芯片设计师，但能让你**在做系统决策时有正确的直觉**。
@@ -137,11 +137,11 @@ NVSwitch:   交换式全互联语义      ← 通过交换芯片把多 GPU 织�
   总 bisection bandwidth: 900 GB/s × 8 = 7.2 TB/s
 ```
 
-### MIG（Multi-Instance GPU）— A100+ 独有
+### MIG（Multi-Instance GPU）— 数据中心 GPU 的资源隔离能力
 
-MIG 允许将一个物理 GPU 划分为最多 7 个独立的 GPU 实例，每个实例有独立的 SM、显存和带宽。适用于推理服务中多个小模型共享一张卡。
+MIG 允许将一个物理 GPU 划分为多个独立 GPU 实例，每个实例有隔离的 SM、显存和带宽。它适用于推理服务中多个小模型共享一张卡，但具体 profile、实例数量和限制要按 GPU 型号查官方文档。
 
-### Transformer Engine — H100+ 独有
+### Transformer Engine — Hopper/Blackwell 上的低精度训练能力
 
 H100 引入的 Transformer Engine 能在 FP8 和 FP16 之间**动态切换精度**：
 
@@ -149,10 +149,10 @@ H100 引入的 Transformer Engine 能在 FP8 和 FP16 之间**动态切换精度
 Forward Pass:
   每一层的输入/输出统计 → 动态计算 scale factor → 决定使用 FP8 还是 FP16
   
-目标: 尽可能用 FP8（速度翻倍）同时保持精度不损失
+目标: 尽可能把适合的矩阵计算降到 FP8，同时用 scale 管理和回退机制控制精度风险
 ```
 
-这是 H100 能在 LLM 训练中比 A100 快 3-4x 的核心原因之一。
+这是 Hopper 之后训练吞吐大幅提升的核心原因之一，但具体提升取决于模型结构、序列长度、并行策略、dense/sparse 口径和软件栈。
 
 ## 常见问题
 
@@ -196,9 +196,9 @@ A: 能，但有限制：
 | **WMMA** | Warp Matrix Multiply-Accumulate，Tensor Core 的编程接口，以 warp（32 线程）为单位执行矩阵乘加 |
 | **NVLink** | NVIDIA GPU 之间的高速点对点互联，带宽远超 PCIe（H100 NVLink 4.0 双向 900 GB/s） |
 | **NVSwitch** | 专用交换芯片，把一台机器内的多张 GPU 组织成高带宽交换网络；语义上接近全互联，但不是每对 GPU 都有独立的物理直连链路 |
-| **MIG（Multi-Instance GPU）** | A100+ 支持的功能，将一张物理 GPU 切分为最多 7 个独立的 GPU 实例，每个有隔离的 SM 和显存 |
-| **Transformer Engine** | H100+ 内置的硬件加速模块，能动态在 FP8 和 FP16 之间切换精度，在不损失训练精度的前提下提速 |
+| **MIG（Multi-Instance GPU）** | 部分 NVIDIA 数据中心 GPU 支持的功能，可将一张物理 GPU 切分为多个隔离实例；具体 profile 和限制随型号变化 |
+| **Transformer Engine** | Hopper/Blackwell 上面向 Transformer 的低精度加速能力，围绕 FP8/FP4 等格式做 scale 管理和 kernel 优化 |
 | **TF32（TensorFloat-32）** | NVIDIA 定义的特殊浮点格式：8 位指数（同 FP32）+ 10 位尾数（同 FP16）。兼顾范围和速度 |
-| **FP8** | 8 位浮点数格式（E4M3 或 E5M2），Hopper 架构原生支持，是目前最低精度的 Tensor Core 数据类型 |
+| **FP8** | 8 位浮点数格式（E4M3 或 E5M2），Hopper 架构原生支持；训练和推理中都需要结合精度回归使用 |
 | **ECC** | Error-Correcting Code，显存纠错功能。会占用约 6% 的显存容量，但能防止长时间训练中的 bit flip 错误 |
 | **TDP** | Thermal Design Power，热设计功耗，表示芯片满载时的最大功耗 |

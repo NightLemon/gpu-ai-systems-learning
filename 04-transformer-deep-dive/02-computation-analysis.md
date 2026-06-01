@@ -70,9 +70,9 @@ Backward: ~4P FLOPs (梯度计算约 2x forward)
 
 例: LLaMA 7B, 训练 1T tokens
   总 FLOPs = 6 × 7B × 1T = 42 ZFLOPs
-  H100 BF16: 1979 TFLOPS, MFU=40%
-  所需 GPU 时间 = 42E21 / (1979E12 × 0.4) = 53E6 秒 = ~614 GPU·天
-  1024 张 H100: ~0.6 天 (理想情况)
+  H100 BF16 (dense): 989 TFLOPS, MFU=40%
+  所需 GPU 时间 = 42E21 / (989E12 × 0.4) = 106E6 秒 = ~1,228 GPU·天
+  1024 张 H100: ~1.2 天 (理想情况)
 ```
 
 ### 显存占用分析

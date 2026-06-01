@@ -7,3 +7,8 @@ __pycache__/
 *.pyc
 .ipynb_checkpoints/
 .site/
+site/
+docs/
+dist/
+build/
+*.egg-info/

@@ -149,12 +149,13 @@ $$\text{MFU} = \frac{\text{实际 FLOPS}}{\text{GPU 峰值 FLOPS}}$$
   
   实际 FLOPS = 计算量 / 每步时间
 
-例: 7B 模型, batch=512, seq=2048, 每步 8.5s, 8×H100
+例: 7B 模型, batch=512, seq=2048, 每步 13s, 8×H100
   tokens/step = 512 × 2048 = 1M
   FLOPs/step = 6 × 7B × 1M = 42 PFLOPs
-  实际 FLOPS = 42P / 8.5s = 4.94 PFLOPS
-  H100 BF16 峰值 = 1979 TFLOPS × 8 = 15.8 PFLOPS
-  MFU = 4.94 / 15.8 = 31.3%
+  实际 FLOPS = 42P / 13s = 3.23 PFLOPS
+  H100 BF16 dense 峰值 ≈ 989 TFLOPS × 8 = 7.9 PFLOPS
+  MFU(dense 口径) = 3.23 / 7.9 = 40.9%
+  如果误用 2:4 sparse 宣传口径 1979 TFLOPS，MFU 会被压到 20.4%
   
 优秀的 MFU: >40% (单机可达 50%+, 大集群 30-45%)
 ```

@@ -1,21 +1,21 @@
 # 推理框架选型指南
 
-> vLLM、TensorRT-LLM、SGLang、TGI——什么场景选什么？
+> vLLM、TensorRT-LLM、SGLang、TGI——什么场景选什么？本页按 2026-06-01 的版本基线修订，框架功能仍以官方文档和实际 benchmark 为准。
 
 ## 选型决策矩阵
 
 | 场景 | 推荐 | 次选 | 原因 |
 |------|------|------|------|
 | **快速原型/研究** | vLLM | SGLang | pip install 即用，模型支持最广 |
-| **生产高性能 (H100)** | TRT-LLM | SGLang | FP8 优化深，kernel 最快 |
-| **生产高性能 (A100)** | vLLM/SGLang | TRT-LLM | A100 上差距缩小，运维更简单 |
+| **生产高性能 (H100/Blackwell)** | TRT-LLM | SGLang/vLLM | NVIDIA 编译链和 FP8/FP4 优化成熟，但要接受 engine/build 发布链路 |
+| **生产高性能 (A100)** | vLLM/SGLang | TRT-LLM | 无 Hopper FP8，运维复杂度和性能收益要实测权衡 |
 | **高频换模型** | vLLM | SGLang | 无需 build engine |
 | **前缀缓存重度使用** | SGLang | vLLM | RadixAttention 更激进 |
-| **结构化输出 (JSON)** | SGLang | vLLM | 原生 constrained decoding |
+| **结构化输出 (JSON)** | SGLang/vLLM | TGI | 约束解码能力迭代很快，需逐项验证 JSON schema、tool calling 和 streaming 行为 |
 | **HuggingFace 生态** | TGI | vLLM | HF 原生，Inference Endpoints 集成 |
 | **消费级 GPU / CPU** | llama.cpp | Ollama | GGUF 量化，资源要求低 |
 | **嵌入/重排序模型** | vLLM | TGI | 支持 embedding 模型 |
-| **多模态 (VLM)** | vLLM | SGLang | LLaVA 等视觉模型支持 |
+| **多模态 (VLM)** | vLLM/SGLang | TGI | 支持列表随版本变化，生产前按目标模型查兼容矩阵 |
 
 ## 关键对比
 
@@ -46,8 +46,8 @@
    - 高并发吞吐: TRT-LLM/SGLang 通常领先
 
 3. 注意硬件:
-   - H100 + FP8: TRT-LLM 独占优势
-   - A100: 差距缩小（无 FP8 Tensor Core）
+   - H100/Blackwell + 低精度: TRT-LLM 常有更深的 NVIDIA kernel/engine 优化，但 vLLM/SGLang 也在快速跟进
+   - A100: 无 Hopper FP8 Tensor Core，框架差距更依赖调度、kernel 和请求分布
 
 4. 不要只看 throughput:
    - 还要看 P99 延迟（长尾请求）

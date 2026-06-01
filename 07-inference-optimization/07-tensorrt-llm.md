@@ -1,6 +1,6 @@
 # TensorRT-LLM
 
-> NVIDIA 官方的 LLM 推理优化库——将模型编译为高度优化的执行引擎。
+> NVIDIA 官方的 LLM 推理优化库——将模型编译为高度优化的执行引擎。示例和参数按概念讲解，实际部署请优先查当前版本文档和 `trtllm-build --help`。
 
 ## 核心概念
 
@@ -35,7 +35,7 @@ Kernel 融合:
 
 FP8 量化 (Hopper 原生):
   TRT-LLM 深度集成 H100 的 FP8 Tensor Core
-  → 计算速度翻倍，精度影响极小
+  → 吞吐潜力高，但是否可用取决于模型、量化 recipe、校准/scale 管理和任务级精度回归
 
 GEMM Plugin:
   针对 LLM 常见的 GEMM 形状（长而窄的矩阵）定制优化
@@ -48,57 +48,41 @@ Custom Attention Kernel:
 
 ### 使用示例
 
+TensorRT-LLM 的高层 API 和命令行变化比较快。学习时建议把下面代码当作“当前入口形态”的例子，而不是背具体参数名。
+
 ```python
-# 1. 转换模型 (使用 TRT-LLM 的 Python API)
-from tensorrt_llm import Builder
-from tensorrt_llm.models import LLaMAForCausalLM
+# Python 高层 API：适合先验证模型能跑通
+from tensorrt_llm import LLM, SamplingParams
 
-# 从 HuggingFace checkpoint 构建
-model = LLaMAForCausalLM.from_hugging_face(
-    "meta-llama/Llama-2-7b-hf",
-    dtype="float16",
-    mapping=tensorrt_llm.Mapping(world_size=2, tp_size=2),
+llm = LLM(model="TinyLlama/TinyLlama-1.1B-Chat-v1.0")
+sampling_params = SamplingParams(max_tokens=100, temperature=0.7)
+
+outputs = llm.generate(
+    ["The capital of France is"],
+    sampling_params,
 )
-
-builder = Builder()
-engine = builder.build_engine(model, BuildConfig(
-    max_batch_size=64,
-    max_input_len=2048,
-    max_seq_len=4096,
-    max_beam_width=1,
-))
-engine.save("llama-7b-trt")
-
-# 2. 推理
-from tensorrt_llm.runtime import ModelRunner
-
-runner = ModelRunner.from_dir("llama-7b-trt")
-outputs = runner.generate(
-    input_text=["The capital of France is"],
-    max_new_tokens=100,
-    temperature=0.7,
-)
+print(outputs[0].outputs[0].text)
 ```
 
 ```bash
-# 命令行方式
-# 转换
-trtllm-build --model_dir meta-llama/Llama-2-7b-hf \
-    --output_dir ./engine \
-    --dtype float16 \
-    --tp_size 2 \
-    --max_batch_size 64 \
-    --max_input_len 2048 \
-    --max_seq_len 4096 \
-    --gemm_plugin float16 \
-    --gpt_attention_plugin float16
+# OpenAI-compatible serving 入口
+trtllm-serve TinyLlama/TinyLlama-1.1B-Chat-v1.0 \
+    --host 0.0.0.0 \
+    --port 8000
 
-# FP8 量化 + 编译
-trtllm-build --model_dir meta-llama/Llama-2-7b-hf \
-    --output_dir ./engine_fp8 \
-    --dtype float16 \
-    --quantization fp8 \
-    --tp_size 2
+curl http://localhost:8000/v1/completions \
+    -H "Content-Type: application/json" \
+    -d '{"model":"TinyLlama/TinyLlama-1.1B-Chat-v1.0","prompt":"Hello","max_tokens":64}'
+```
+
+```bash
+# 低层 engine build 流程仍然存在，但当前版本通常以 checkpoint_dir / build_config 为核心。
+# 真正部署前务必以 trtllm-build --help 和对应模型 example 为准。
+trtllm-build \
+    --checkpoint_dir <converted_checkpoint_dir> \
+    --output_dir ./engine \
+    --max_batch_size 64 \
+    --max_seq_len 4096
 ```
 
 ## 关键细节
@@ -112,8 +96,7 @@ Build 阶段的关键参数（一旦确定，运行时不能改）:
   --max_input_len 2048     最大输入长度
   --max_seq_len 4096       最大总长度（输入+输出）
   --tp_size 2              Tensor Parallel degree
-  --dtype float16          数据类型
-  --quantization fp8       量化方式
+  dtype / quantization     数据类型和量化方式（具体参数名随版本变化）
 
 ⚠️ 以下任一改变都需要重新 build:
   - 更换 GPU 型号（A100 → H100）
@@ -123,7 +106,7 @@ Build 阶段的关键参数（一旦确定，运行时不能改）:
   - 更新模型权重（如微调后）
 
 对线上发布意味着:
-  1. Build 耗时（7B ~10min, 70B ~30-60min）→ 不能热更新模型
+  1. Build 耗时可能从数分钟到更久 → 不能像纯解释式服务那样随意热更新模型
   2. 需要为不同配置维护多个 engine 文件
   3. 发布流程: 新模型 → Build Engine → 验证 → 灰度发布
   4. Engine 文件可能数十 GB → 需要存储和分发方案
@@ -165,22 +148,9 @@ Build 阶段的关键参数（一旦确定，运行时不能改）:
 
 ### TensorRT-LLM vs vLLM 性能对比
 
-```
-典型场景 (LLaMA 7B, A100):
-  
-  指标                 vLLM        TRT-LLM
-  ─────────────────────────────────────────
-  TTFT (ms)           ~50-80      ~40-60      ← 编译优化
-  Decode (tokens/s)   ~40-60      ~50-70      ← kernel 优化
-  Max Throughput       ~2000       ~2500-3000  ← 整体优化
-  
-  差距主要来源:
-  - Kernel 融合更激进（编译时已知 shape → 更优 kernel 选择）
-  - GEMM Plugin 针对特定矩阵形状优化
-  - FP8 整合更深（Hopper 原生）
-```
+不要把某篇 benchmark 里的固定数字搬到自己的选型里。TRT-LLM 的优势通常来自编译期 shape 信息、更深的 kernel/engine 优化，以及对 NVIDIA 数据中心 GPU 低精度路径的快速跟进；vLLM/SGLang 的优势通常是模型支持、部署摩擦和迭代速度。
 
-这类数字只能当方向感，不能直接当采购或选型依据。真正决定是否值得切到 TRT-LLM 的，通常是下面三件事：
+真正决定是否值得切到 TRT-LLM 的，通常是下面三件事：
 
 - 你的线上流量是否稳定到值得为特定 shape 和配置做编译优化
 - 你的团队是否能承受更重的 build、验证和灰度流程
@@ -192,7 +162,7 @@ Build 阶段的关键参数（一旦确定，运行时不能改）:
 选型维度:
 
 1. 性能要求:
-   TRT-LLM 通常比 vLLM 快 15-30%（取决于场景）
+   TRT-LLM 在稳定 shape、稳定模型和 NVIDIA 数据中心 GPU 上经常有优势，但收益幅度必须实测
    如果 SLA 非常紧（如 TTFT < 50ms），TRT-LLM 更合适
    如果性能差 15% 可接受，vLLM 的运维成本更低
 
@@ -205,8 +175,8 @@ Build 阶段的关键参数（一旦确定，运行时不能改）:
    有 NVIDIA TAM 支持或 TRT 经验 → TRT-LLM 能调到更优
 
 4. 硬件:
-   H100 + FP8 → TRT-LLM 的 FP8 优化是独占优势
-   A100 / 消费级 GPU → vLLM 和 TRT-LLM 差距缩小
+   H100/Blackwell + FP8/FP4 → TRT-LLM 的 NVIDIA 编译链优势更容易体现
+   A100 / 消费级 GPU → vLLM、SGLang 和 TRT-LLM 的差距更依赖具体模型与流量
 
 5. 功能需求:
    需要 Speculative Decoding / 自定义采样 → 查各框架的支持程度
@@ -233,11 +203,11 @@ Build 阶段的关键参数（一旦确定，运行时不能改）:
 
 **Q: TensorRT-LLM 的 "build" 过程要多久？**
 
-A: 取决于模型大小和配置。7B 模型通常 5-15 分钟，70B 模型可能 30-60 分钟。每次更改 batch size、sequence length、TP size 等配置都需要重新 build。
+A: 取决于模型大小、GPU、量化方式、并行配置和当前 TensorRT-LLM 版本。可以先按“数分钟到数十分钟”做工程预期；每次更改 engine 约束、量化或并行方式，都要重新验证是否需要 rebuild。
 
 **Q: TensorRT-LLM 支持哪些模型？**
 
-A: 支持主流 LLM：LLaMA、GPT、Falcon、Mistral、Mixtral（MoE）、ChatGLM 等。但新模型的支持通常比 vLLM 慢几周到几个月。
+A: 支持很多主流 LLM 和多种量化/并行配置，但支持范围随版本变化很快。新模型能否直接 build、是否支持目标量化和并行方式，应查当前 support matrix 和 examples，而不是只看模型家族名字。
 
 **Q: 什么情况下不建议优先上 TRT-LLM？**
 

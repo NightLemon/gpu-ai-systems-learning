@@ -11,7 +11,7 @@
 | 训练步数 | 1000 步 (足够对比性能，不需要训到收敛) |
 | 固定变量 | seq_len=1024, dtype=BF16, optimizer=AdamW, lr=6e-4 |
 | 硬件 | 4-8× GPU (A100 80GB 推荐，RTX 4090 也可以) |
-| 软件 | PyTorch 2.0+, DeepSpeed 0.14+ |
+| 软件 | PyTorch 2.x, DeepSpeed 当前稳定版（本仓库基线见“版本基线”页） |
 
 ## Step 1: 单卡 Baseline（~2 小时）
 

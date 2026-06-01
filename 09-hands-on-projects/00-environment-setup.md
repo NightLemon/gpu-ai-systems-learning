@@ -26,6 +26,7 @@
 | Ch06 分布式概念 | 理解 AllReduce/AllGather 的通信模式 | 纯阅读 + 画图 |
 
 **云上补：**
+
 - 免费：Google Colab (T4 16GB)、Kaggle Notebooks (P100/T4)
 - 便宜：AutoDL、Vast.ai、RunPod 按小时租
 
@@ -59,6 +60,7 @@ pip install transformers datasets matplotlib jupyter tensorboard
 | Ch09 GEMM | 前 3-4 个 kernel 版本（naive→tiled→shared memory） | 适配 sm_86/sm_89 |
 
 **需要云上做：**
+
 - 7B 模型 LoRA/QLoRA（需 16GB+）
 - vLLM 完整体验（需 16-24GB）
 - FlashAttention 性能对比（需较大 seq_len 才明显）
@@ -115,6 +117,7 @@ if torch.cuda.is_available():
 | KV Cache 显存影响 | 不同 seq_len 下的显存变化 |
 
 **仍需云上做：**
+
 - 多卡 DDP/FSDP/ZeRO
 - Tensor Parallel / Pipeline Parallel
 - 跨机通信和 NCCL 拓扑
@@ -135,14 +138,17 @@ if torch.cuda.is_available():
 
 ### 按小时租（推荐用于重实验）
 
-| 平台 | 特点 | 参考价格 |
+> 云 GPU 价格波动很快，下表只用于判断量级，不用于预算。下单前请按所在区域、GPU 型号、是否抢占式实例、磁盘/公网费用重新核价。
+
+| 平台 | 特点 | 使用建议 |
 |------|------|---------|
-| [AutoDL](https://www.autodl.com/) | 国内，中文界面，便宜 | A100 40G ~¥3-5/h |
-| [Vast.ai](https://vast.ai/) | 全球，便宜但质量参差 | A100 ~$0.5-1.5/h |
-| [RunPod](https://www.runpod.io/) | 稳定，支持多卡 | A100 ~$1-2/h |
-| [Lambda Labs](https://lambdalabs.com/) | 高质量，适合多卡 | 8×A100 ~$10/h |
+| [AutoDL](https://www.autodl.com/) | 国内，中文界面，型号选择多 | 适合短时实验，注意镜像、磁盘和排队情况 |
+| [Vast.ai](https://vast.ai/) | 全球，价格和机器质量差异大 | 适合低成本试验，务必看主机评分、带宽和退款规则 |
+| [RunPod](https://www.runpod.io/) | 上手相对顺滑，支持多种实例 | 适合 notebook、推理服务和中等规模实验 |
+| [Lambda Labs](https://lambdalabs.com/) | 机器质量和多卡体验较稳定 | 适合多卡训练、长时间 profiling 和课程项目 |
 
 **建议策略：**
+
 1. 本地写好代码和配置，调通逻辑
 2. 云上只做"运行和观察结果"，最大化利用租用时间
 3. 结果（log、profiler trace、截图）保存到本地后立即释放
