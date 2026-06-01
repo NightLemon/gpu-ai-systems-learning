@@ -122,6 +122,7 @@ nav:
     - 8.3 K8s GPU 调度: 08-infrastructure/03-kubernetes-gpu.md
     - 8.4 监控: 08-infrastructure/04-monitoring.md
     - 8.5 高级调试手册: 08-infrastructure/05-debugging-runbook.md
+    - 8.6 实战踩坑案例: 08-infrastructure/06-production-pitfalls.md
   - Ch09 实战项目:
     - 概述: 09-hands-on-projects/README.md
     - 环境搭建: 09-hands-on-projects/00-environment-setup.md

@@ -35,13 +35,15 @@ metadata:
 spec:
   containers:
   - name: cuda
-    image: nvcr.io/nvidia/pytorch:24.01-py3
+    image: nvcr.io/nvidia/pytorch:26.04-py3
     resources:
       limits:
         nvidia.com/gpu: 2   # 请求 2 张 GPU
     # 注意: K8s 默认不保证这 2 张卡在同一 NVLink domain
     # 可能分到不同 NUMA 节点的卡 → 性能下降
 ```
+
+这里的 `26.04-py3` 是 2026-06-01 核查时官方 PyTorch release notes 中最新索引到的 NGC PyTorch 镜像示例。生产环境不要盲目追新，也不要长期停在旧教程里的 `24.01-py3`：镜像 tag 必须和 GPU 架构、主机驱动、CUDA runtime、PyTorch/NCCL/TensorRT-LLM 版本一起验证。更完整的版本踩坑见 [8.6 实战踩坑案例](06-production-pitfalls.md)。
 
 ### Gang Scheduling — 分布式训练的必要条件
 

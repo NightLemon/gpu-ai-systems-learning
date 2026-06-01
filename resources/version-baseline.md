@@ -28,6 +28,18 @@
 - [FlashAttention 项目](https://github.com/Dao-AILab/flash-attention)
 - [NVIDIA GPU Operator 文档](https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/)
 
+## NGC / Kubernetes 基础设施基线
+
+以下不是“必须使用的版本”，而是 2026-06-01 更新基础设施章节时用于判断教程是否过期的参照点。
+
+| 组件 | 当前核查到的官方线索 | 文档中的使用建议 |
+|------|----------------------|------------------|
+| NGC PyTorch 镜像 | NVIDIA PyTorch release notes 最新索引到 `26.04-py3`；该镜像使用 CUDA 13.2.1、PyTorch 2.12.0a0 等较新组件 | 不再把旧教程里的 `nvcr.io/nvidia/pytorch:24.01-py3` 当默认模板；按 GPU 架构、主机驱动和框架栈选择 tag |
+| NGC PyTorch 支持窗口 | `25.01` 起针对 Blackwell 优化，同时 Volta 不再支持；`25.03` 起镜像内有 pip constraints | Blackwell 节点不要拿 24.x 镜像做长期基线；V100/Volta 节点不要盲升到 25.01+；派生镜像要谨慎处理 `pip install -U` |
+| NVIDIA GPU Operator | release notes 已进入 26.x；26.3.2 文档列出 device plugin 0.19.2、container toolkit 1.19.1 等组件 | K8s GPU 排障要同时看 Operator、device plugin、container toolkit、driver container 和节点 OS/内核 |
+| CDI / RuntimeClass | GPU Operator 25.10+ 默认启用 CDI | 旧 workload 如果依赖 `NVIDIA_VISIBLE_DEVICES` 或管理容器不请求 GPU，要额外检查 `runtimeClassName: nvidia` / NRI / CDI 配置 |
+| NCCL 容器限制 | NCCL troubleshooting 明确提醒 Docker `/dev/shm`、memlock、cuMem host allocations 和 NUMA 能力会影响初始化与通信 | 分布式训练 YAML 应显式配置 `/dev/shm`，并把 `NCCL_CUMEM_HOST_ENABLE=0` 当定位手段而不是默认调参 |
+
 ## 阅读原则
 
 1. **稳定原理优先**：CUDA execution model、memory hierarchy、attention FLOPs、collective communication 这些内容变化慢，可以作为长期基础。
