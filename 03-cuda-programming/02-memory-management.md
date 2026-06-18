@@ -123,8 +123,8 @@ cudaStreamDestroy(stream);
 ### PCIe 带宽 — 隐藏的瓶颈
 
 ```
-PCIe Gen4 x16: ~32 GB/s（双向各 32 GB/s）
-PCIe Gen5 x16: ~64 GB/s
+PCIe Gen4 x16: 单向 ~16 GB/s，双向合计 ~32 GB/s
+PCIe Gen5 x16: 单向 ~32 GB/s，双向合计 ~64 GB/s
 
 VS.
 

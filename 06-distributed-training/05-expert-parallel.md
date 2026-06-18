@@ -101,21 +101,31 @@ class TopKRouter(nn.Module):
 如果 Router 总是把大量 token 路由给少数几个 expert → 负载不均衡 → 性能下降
 
 解决方案：
-1. **辅助损失（Auxiliary Loss）**：鼓励均匀分配
+1. **辅助损失（Auxiliary Loss）**：鼓励均匀分配。下面是 Switch Transformer / Mixtral 使用的版本（GShard aux loss）：
+
 ```python
-# Load Balancing Loss
-# 注意: top_k_indices 来自前面 Router 的输出
+# Load Balancing Loss (Switch Transformer 版本)
+# 输入均来自上面的 Router:
+#   router_logits: (batch, seq_len, num_experts)  —— softmax 之前的 gate 输出
+#   top_k_indices: (batch, seq_len, top_k)        —— 每个 token 选中的 expert id
 def load_balance_loss(router_logits, top_k_indices, num_experts):
-    # f_i: expert i 被选中的比例
-    # P_i: router 分配给 expert i 的概率均值
-    routing_probs = F.softmax(router_logits, dim=-1)
-    expert_mask = F.one_hot(top_k_indices, num_experts).float()
-    
-    f = expert_mask.mean(dim=(0, 1))  # 每个 expert 的实际负载
-    P = routing_probs.mean(dim=(0, 1))  # 每个 expert 的平均概率
-    
-    return num_experts * (f * P).sum()  # 均匀时最小
+    routing_probs = F.softmax(router_logits, dim=-1)  # (B, S, E)
+
+    # f_i: 每个 expert 实际被分配到的 token 占比
+    #   one_hot -> (B, S, top_k, E)，在 top_k 维求和得到「token 是否路由到 expert i」，
+    #   再对所有 token 求平均
+    expert_mask = F.one_hot(top_k_indices, num_experts).float()  # (B, S, top_k, E)
+    tokens_per_expert = expert_mask.sum(dim=2)                   # (B, S, E)
+    f = tokens_per_expert.mean(dim=(0, 1))                       # (E,)
+
+    # P_i: router 分配给每个 expert 的平均概率（用全部概率，可导）
+    P = routing_probs.mean(dim=(0, 1))                           # (E,)
+
+    # f 和 P 都是 (E,)，点积后乘 num_experts；负载越均匀该值越小
+    return num_experts * torch.sum(f * P)
 ```
+
+> 注意 `f` 用 one-hot（不可导，仅统计实际负载），`P` 用连续概率（可导，提供梯度），两者相乘才能在保持负载统计意义的同时把梯度回传给 router。Mixtral 等实现思路一致，细节（是否乘 top_k、是否按 dropped token 修正）按论文略有差异。
 
 2. **Expert Capacity**：限制每个 expert 处理的最大 token 数
 ```

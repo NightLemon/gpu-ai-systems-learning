@@ -19,7 +19,7 @@
 | 层数 | 96 | 32/80 | 32/80/126 | 32 | 60 |
 | Hidden | 12288 | 4096/8192 | 4096/8192/16384 | 4096 | 5120 |
 | Heads | 96 | 32/64 | 32/64/128 | 32 | 128 |
-| KV Heads | 96 (MHA) | 32/8 (GQA) | 8/8/8 (GQA) | 8 (GQA) | MLA |
+| KV Heads | 96 (MHA) | 32(MHA)/8(GQA) | 8/8/8 (GQA) | 8 (GQA) | MLA |
 | FFN | GeLU | SwiGLU | SwiGLU | SwiGLU | SwiGLU+MoE |
 | Norm | LayerNorm | RMSNorm | RMSNorm | RMSNorm | RMSNorm |
 | Pos Enc | Learned | RoPE | RoPE | RoPE | RoPE |

@@ -115,15 +115,18 @@ Consolidated Checkpoint (保存后合并为 full):
   GPU 只需等待 GPU→CPU 拷贝或 staging 完成，然后继续训练
   后台 IO 不阻塞训练
 
-PyTorch 2.0+ (torch.distributed.checkpoint):
-  # 基础接口: sharded 保存（同步，但各 rank 只写自己的 shard → 并行 IO）
-  save(state_dict, storage_writer=FileSystemWriter(path))
-  
-  # 异步保存需要额外封装:
-  # 1. 先将 state_dict 拷贝到 CPU（快，几秒）
-  # 2. 后台线程调用 save() 写入存储（慢，但不阻塞训练）
-  # PyTorch 2.4+ 的 AsyncCheckpointer 或自行实现 CPU offload + 后台写入
-  # ⚠️ 不是调 save() 就自动异步——默认是同步阻塞的
+PyTorch 2.0+ (torch.distributed.checkpoint, 简称 DCP):
+  # 基础接口: sharded 保存（同步阻塞，但各 rank 只写自己的 shard → 并行 IO）
+  dcp.save(state_dict, storage_writer=FileSystemWriter(path))
+
+  # 异步保存 (PyTorch 2.4+ 官方接口 dcp.async_save):
+  #   内部先把 state_dict 拷到 CPU buffer（staging，快），再由后台写存储
+  #   返回一个 future，下次保存前用 .result() 等上一次写完
+  fut = dcp.async_save(state_dict, checkpoint_id=path)
+  ...               # 训练继续，IO 在后台进行
+  if fut: fut.result()   # 下一次 checkpoint 前确保上一次已落盘
+  # ⚠️ 注意: 同步的 dcp.save() 不会自动异步; 异步必须显式用 async_save()
+  #          代价是 CPU 内存增加 ~ (每 rank checkpoint 大小 × rank 数)
 ```
 
 ### Checkpoint 一致性问题

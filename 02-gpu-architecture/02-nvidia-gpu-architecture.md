@@ -73,14 +73,14 @@ timeline
 | SM 数量 | 80 | 108 | 132 | 160+ |
 | CUDA Cores / SM | 64 | 64 | 128 | 128 |
 | Tensor Cores / SM | 8 | 4 (更强) | 4 (更强) | 4 (更强) |
-| FP16 Tensor 峰值* (TFLOPS) | 125 | 312 | 1,979 | ~4,500 |
-| FP8 Tensor 峰值* (TFLOPS) | — | — | 3,958 | ~9,000 |
+| FP16 Tensor 峰值* (dense, TFLOPS) | 125 | 312 | 989 | ~2,250 |
+| FP8 Tensor 峰值* (dense, TFLOPS) | — | — | 1,979 | ~4,500 |
 | HBM 带宽 (TB/s) | 0.9 | 2.0 | 3.35 | 8.0 |
 | HBM 容量 | 32 GB | 80 GB | 80 GB | 192 GB |
 | NVLink 带宽 (双向) | 300 GB/s | 600 GB/s | 900 GB/s | 1,800 GB/s |
 | TDP | 300W | 400W | 700W | 1000W |
 
-> * 上表中的 A100/H100/B200 Tensor 峰值采用常见的厂商宣传口径，通常包含结构化稀疏带来的加速；做 dense 算法分析、roofline 建模或 MFU 估算时，应确认对应的 dense 峰值。
+> * 上表 Tensor 峰值统一采用 **dense（非稀疏）** 口径，便于 roofline 建模和 MFU 估算时直接使用；本仓库其它章节（如内存带宽、显存层级）也以此口径为准。A100 及之后支持 2:4 结构化稀疏，厂商宣传口径常给出约 2x 的数字（如 H100 FP16 稀疏 1,979、FP8 稀疏 3,958），引用时务必确认是 dense 还是 sparse。V100 无稀疏加速。
 
 > 注意 Tensor Core 峰值从 V100→H100 的增长远快于 HBM 带宽增长。这意味着 **memory bandwidth 越来越成为瓶颈**。
 
@@ -134,7 +134,9 @@ NVSwitch:   交换式全互联语义      ← 通过交换芯片把多 GPU 织�
   GPU2 ──── GPU3
     ...
   GPU 先连到 NVSwitch，再通过交换芯片互通
-  总 bisection bandwidth: 900 GB/s × 8 = 7.2 TB/s
+  每卡 NVLink 双向带宽 900 GB/s × 8 卡 = 7.2 TB/s（全系统聚合带宽）
+  注: 这是所有 GPU 链路的聚合总和，不是 bisection bandwidth
+      （把 8 卡切成两半 4v4 时，DGX H100 的对分带宽约为一半，~3.6 TB/s）
 ```
 
 ### MIG（Multi-Instance GPU）— 数据中心 GPU 的资源隔离能力
