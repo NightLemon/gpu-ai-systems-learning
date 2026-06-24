@@ -17,7 +17,7 @@
 | **vLLM** | 高性能 LLM 推理 (PagedAttention) | [GitHub](https://github.com/vllm-project/vllm) |
 | **TensorRT-LLM** | NVIDIA LLM 推理优化 | [GitHub](https://github.com/NVIDIA/TensorRT-LLM) |
 | **SGLang** | 快速 LLM 推理 (RadixAttention) | [GitHub](https://github.com/sgl-project/sglang) |
-| **llama.cpp** | CPU/GPU 推理 (GGUF 量化) | [GitHub](https://github.com/ggerganov/llama.cpp) |
+| **llama.cpp** | CPU/GPU 推理 (GGUF 量化) | [GitHub](https://github.com/ggml-org/llama.cpp) |
 | **TGI** | HuggingFace 推理服务 | [GitHub](https://github.com/huggingface/text-generation-inference) |
 
 ## CUDA / GPU 编程

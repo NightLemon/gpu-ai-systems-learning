@@ -1,16 +1,16 @@
 # 版本基线
 
-> 最后核查：2026-06-01。GPU / AI 系统生态迭代很快，本页记录学习材料采用的时间基线；真正部署前仍应以官方文档、release notes 和本机 `--help` 输出为准。
+> 最后核查：2026-06-18。GPU / AI 系统生态迭代很快，本页记录学习材料采用的时间基线；真正部署前仍应以官方文档、release notes 和本机 `--help` 输出为准。
 
 ## Python / AI 框架
 
-以下版本来自 2026-06-01 对 PyPI metadata 的查询，用于判断文档是否明显滞后。
+以下版本来自 2026-06-18 对 PyPI metadata 的查询，用于判断文档是否明显滞后。
 
 | 包 | 当前 PyPI 版本 | 文档中的使用建议 |
 |----|----------------|------------------|
-| `torch` | 2.12.0 | 新代码优先使用 `torch.amp`、`torch.compile`、`torch.nn.attention.sdpa_kernel` 等当前接口；旧教程里的 `torch.cuda.amp` 和 `torch.backends.cuda.sdp_kernel` 需要留意迁移 |
-| `triton` | 3.7.0 | 作为手写 GPU kernel 和 PyTorch Inductor 代码生成的重要工具，但性能结论必须结合矩阵形状和 GPU 代际实测 |
-| `vllm` | 0.22.0 | CLI、调度器、量化、多模态和结构化输出支持变化较快，部署前以 `vllm serve --help` 与官方文档为准 |
+| `torch` | 2.12.1 | 新代码优先使用 `torch.amp`、`torch.compile`、`torch.nn.attention.sdpa_kernel` 等当前接口；旧教程里的 `torch.cuda.amp` 和 `torch.backends.cuda.sdp_kernel` 需要留意迁移 |
+| `triton` | 3.7.1 | 作为手写 GPU kernel 和 PyTorch Inductor 代码生成的重要工具，但性能结论必须结合矩阵形状和 GPU 代际实测 |
+| `vllm` | 0.23.0 | CLI、调度器、量化、多模态和结构化输出支持变化较快，部署前以 `vllm serve --help` 与官方文档为准 |
 | `sglang` | 0.5.12.post1 | 重点关注 RadixAttention、结构化输出、前缀缓存和多模态支持；和 vLLM 的优劣要按流量形态 benchmark |
 | `tensorrt-llm` | 1.2.1 | 更适合模型和 shape 相对稳定、愿意维护 build/engine 发布链路的 NVIDIA 数据中心 GPU 场景 |
 | `flash-attn` | 2.8.3 | PyPI 稳定包仍以 FlashAttention-2 生态为主；FlashAttention-3 主要面向 Hopper，使用方式需查项目 README |
