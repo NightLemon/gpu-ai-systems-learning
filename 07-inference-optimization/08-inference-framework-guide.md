@@ -100,6 +100,10 @@ A: 当模型和配置相对稳定、硬件以 NVIDIA 数据中心卡为主、性
 
 A: vLLM、SGLang 提供较完整的 OpenAI-compatible API（chat/completions、streaming 等），TGI 也有类似接口。TRT-LLM 本身不直接暴露 HTTP API，需要结合 Triton Inference Server 或额外的服务层做 API 适配。切换框架时客户端代码**不一定零改动**——streaming 行为、tool calling 支持、错误码格式、参数支持范围（如 logprobs、suffix）各框架实现程度不同，上线前需要逐项验证。
 
+## 下一章
+
+[Ch08 基础设施](../08-infrastructure/README.md)——前面假设了"集群已经能正常工作"。现实里训练任务挂掉、性能莫名变差、节点排障，**真正的成本和事故都集中在基础设施层**：集群网络、存储、K8s GPU 调度、监控、生产踩坑。这章的视角对后端工程师最熟悉，也最容易出工程价值。
+
 ## 延伸阅读
 
 - [vLLM](https://github.com/vllm-project/vllm)

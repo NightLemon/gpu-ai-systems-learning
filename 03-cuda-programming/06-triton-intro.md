@@ -212,6 +212,15 @@ A: PyTorch 2.0 的 `torch.compile()` 使用 TorchInductor 后端，TorchInductor
 
 A: 对于 GEMM：70-90%（取决于矩阵大小和形状）。对于融合算子（如 fused softmax、FlashAttention），Triton 版本通常比未融合的 PyTorch 快几倍，因为减少了 HBM 读写。
 
+## 下一章
+
+CUDA 部分结束。接下来可以走两条路：
+
+- **想先理解模型** → [Ch04 Transformer 深入](../04-transformer-deep-dive/README.md)，把 attention/FFN 的计算结构和显存账理清楚，是后面所有训练/推理优化的前提。
+- **想先做分布式** → [Ch06 分布式训练](../06-distributed-training/README.md) 或 [Ch07 推理优化](../07-inference-optimization/README.md)，CUDA 知识已经够支撑后面的 kernel 解读。
+
+推荐先 Ch04，因为它给后面所有章节提供"对什么做并行/优化"的对象。
+
 ## 延伸阅读
 
 - [Triton Official Tutorials](https://triton-lang.org/main/getting-started/tutorials/index.html) — 官方教程（必读）

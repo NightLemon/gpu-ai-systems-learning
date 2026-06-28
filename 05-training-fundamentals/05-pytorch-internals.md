@@ -255,6 +255,10 @@ torch.cuda.memory._dump_snapshot("mem_snapshot.pickle")
 - **分布式训练通信** → 参见 [Ch06 分布式训练](../06-distributed-training/README.md)
 - **性能分析工具** → 参见 [Ch05 Profiling](04-profiling.md)
 
+## 下一章
+
+[Ch06 分布式训练](../06-distributed-training/README.md)——单卡训练流程已经清楚，现在把它扩到 N 卡：通信原语（AllReduce / ReduceScatter / All-to-All）→ DDP / FSDP / ZeRO → TP / PP / EP → DeepSpeed / Megatron-LM。这是大模型训练的核心章节。
+
 ## 延伸阅读
 
 - [PyTorch Internals (Edward Z. Yang)](http://blog.ezyang.com/2019/05/pytorch-internals/)

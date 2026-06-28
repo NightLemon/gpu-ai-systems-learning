@@ -80,6 +80,10 @@ class RMSNorm(nn.Module):
         return x / rms * self.weight
 ```
 
+## 下一章
+
+[Ch05 训练基础](../05-training-fundamentals/README.md)——你已经会算训练显存账（16P bytes）和 FLOPs，下一步是工程上把单卡训练跑稳：混合精度怎么选、显存不够时如何用计算换、profiling 怎么定位瓶颈。这些技能是后面分布式训练的基础——单卡上的低效会被并行系统线性放大。
+
 ## 延伸阅读
 
 - [LLaMA 论文](https://arxiv.org/abs/2302.13971) — Touvron et al., 2023

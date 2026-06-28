@@ -339,6 +339,10 @@ GPU Operator 可以帮你装驱动，但它不是魔法。驱动容器、宿主�
 5. 再跑一个最小 `torchrun` 或 vLLM smoke test。
 6. 最后才迁移真实训练/推理 workload。
 
+## 下一章
+
+[Ch09 实战项目](../09-hands-on-projects/README.md)——理论结束，开始动手。前面所有章节的概念、工具、踩坑经验都会在这里组合使用：GEMM 优化、多 GPU 训练、推理服务部署。从中挑 1-2 个完成，并用前面学过的 profiling、监控工具量化结果，这才算真正把这套体系吃下去。
+
 ## 延伸阅读
 
 - [NVIDIA PyTorch Container Release Notes](https://docs.nvidia.com/deeplearning/frameworks/pytorch-release-notes/index.html)

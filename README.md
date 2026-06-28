@@ -60,9 +60,34 @@ graph LR
 
 ### Phase 4：高级推理与实战（Week 10-12）
 
-- [ ] **Week 10**：Ch07 推理优化（Speculative Decoding、FlashAttention、vLLM）
-- [ ] **Week 11**：Ch07 TensorRT-LLM + Ch08 基础设施
+- [ ] **Week 10**：Ch07 高级推理（Speculative Decoding、FlashAttention、vLLM、TensorRT-LLM、框架选型）
+- [ ] **Week 11**：Ch08 基础设施（集群网络、存储、K8s GPU、监控、排障与生产踩坑）
 - [ ] **Week 12**：Ch09 实战项目（选择 1-2 个动手完成）
+
+> Phase 3-4 边界说明：Week 9 把 Ch07 前半段（KV-cache、量化、Continuous Batching）吃掉，Week 10 集中收尾 Ch07 后半段并做框架选型。Ch07/Ch08 都偏厚，可以按需精读：先把对工作直接相关的小节看透，回到剩下的留作 reference。
+
+## 🔍 我想了解 X，该看哪里？
+
+按主题反向索引，不必从头读完整章。
+
+| 你想搞清楚的问题 | 直接看这里 |
+|------------------|-----------|
+| 训练一个 7B/70B 模型大概要烧多少卡天/美元 | [00/03-economics.md](00-industry-overview/03-economics.md)、[04/02-computation-analysis.md](04-transformer-deep-dive/02-computation-analysis.md) |
+| 训练显存账（参数 + 梯度 + 优化器 + 激活）怎么算 | [04/02-computation-analysis.md](04-transformer-deep-dive/02-computation-analysis.md) |
+| KV-Cache 大小怎么算、GQA 为什么省 | [04/01-attention-mechanism.md](04-transformer-deep-dive/01-attention-mechanism.md)、[07/01-kv-cache.md](07-inference-optimization/01-kv-cache.md) |
+| BF16 vs FP16 vs FP8，混合精度怎么选 | [05/01-mixed-precision.md](05-training-fundamentals/01-mixed-precision.md) |
+| GEMM 优化是怎么从朴素一步步做到接近 cuBLAS 的 | [03/05-gemm-case-study.md](03-cuda-programming/05-gemm-case-study.md) |
+| FlashAttention 为什么同时省显存又快 | [07/05-flash-attention.md](07-inference-optimization/05-flash-attention.md) |
+| DDP / FSDP / ZeRO-1/2/3 啥关系，怎么选 | [06/02-data-parallel.md](06-distributed-training/02-data-parallel.md)、[06/08-training-strategy-guide.md](06-distributed-training/08-training-strategy-guide.md) |
+| TP / PP / EP 通信量公式 | [06/03-tensor-parallel.md](06-distributed-training/03-tensor-parallel.md)、[06/04-pipeline-parallel.md](06-distributed-training/04-pipeline-parallel.md)、[06/05-expert-parallel.md](06-distributed-training/05-expert-parallel.md) |
+| 64/256 卡集群里 TP/PP/DP/EP 怎么映射到机内/机架/跨机架 | [08/01-gpu-cluster-networking.md](08-infrastructure/01-gpu-cluster-networking.md) |
+| vLLM / TensorRT-LLM / SGLang / TGI 怎么选 | [07/08-inference-framework-guide.md](07-inference-optimization/08-inference-framework-guide.md) |
+| INT8 / INT4 / FP8 量化能加速多少、精度损失 | [07/02-quantization.md](07-inference-optimization/02-quantization.md) |
+| Continuous Batching、PagedAttention、Speculative Decoding 原理 | [07/03-continuous-batching.md](07-inference-optimization/03-continuous-batching.md)、[07/06-vllm-architecture.md](07-inference-optimization/06-vllm-architecture.md)、[07/04-speculative-decoding.md](07-inference-optimization/04-speculative-decoding.md) |
+| 训练突然挂、NCCL 卡死、IB 带宽掉一半，先看什么 | [08/04-monitoring.md](08-infrastructure/04-monitoring.md)、[08/05-debugging-runbook.md](08-infrastructure/05-debugging-runbook.md)、[08/06-production-pitfalls.md](08-infrastructure/06-production-pitfalls.md) |
+| Checkpoint 怎么省时间 / async / 一致性 | [08/02-storage-systems.md](08-infrastructure/02-storage-systems.md) |
+| MFU 怎么算、为什么用 dense 而非 sparse 峰值 | [05/04-profiling.md](05-training-fundamentals/04-profiling.md)、[08/04-monitoring.md](08-infrastructure/04-monitoring.md) |
+| 该用哪个版本的 PyTorch / vLLM / NGC 镜像 | [resources/version-baseline.md](resources/version-baseline.md) |
 
 ## 🎯 前置假设
 

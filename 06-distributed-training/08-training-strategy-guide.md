@@ -131,6 +131,10 @@ global batch 不是单纯的吞吐旋钮。它会影响优化动态和收敛行�
 
 出现这些信号时，往往不是“再调一下参数”，而是需要回到并行策略本身重选。
 
+## 下一章
+
+[Ch07 推理优化](../07-inference-optimization/README.md)——训练侧告一段落，下一步看推理。推理的瓶颈和优化逻辑与训练完全不同：训练是 throughput 导向、长时间运行，推理是 latency + 多租户、短任务、SLA 严苛。KV-Cache、PagedAttention、Continuous Batching、Speculative Decoding 这些技术都因此而生。
+
 ## 延伸阅读
 
 - [Efficient Large-Scale Language Model Training on GPU Clusters](https://arxiv.org/abs/2104.04473) — Megatron-LM 3D 并行论文

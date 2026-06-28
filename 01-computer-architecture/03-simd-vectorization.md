@@ -77,6 +77,10 @@ gcc -O3 -march=native -ftree-vectorize -fopt-info-vec my_code.c
 
 **带到 GPU 章节的关键认知**：当你在 Ch02 看到 GPU 的 Warp 概念时，可以把它理解为"SIMD 的极端扩展版"——向量宽度从 16 扩展到 32，然后通过调度数千个 warp 实现百万级线程并行。
 
+## 下一章
+
+[Ch02 GPU 架构](../02-gpu-architecture/README.md)——前面学到的 cache 层级、SIMD 并行、Memory-bound 概念，会在 GPU 上直接对应到 shared memory / SIMT / HBM 带宽。现在把视角从 CPU 切到 GPU，看一切 AI 优化的硬件基础。
+
 ## 延伸阅读
 
 - [Intel Intrinsics Guide](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/)

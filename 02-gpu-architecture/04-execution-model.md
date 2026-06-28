@@ -221,6 +221,12 @@ A: NVIDIA 没有公开具体调度策略，你**不能依赖任何特定顺序**
 
 A: CUDA 9.0 引入的 API，允许更灵活的线程分组和同步，包括 warp 级同步（`__syncwarp()`）、block 级之外的 grid 级同步（需硬件支持）。这在需要 block 间协作的算法中很有用。
 
+## 下一章
+
+[Ch03 CUDA 编程](../03-cuda-programming/README.md)——知道了 SM / Warp / Occupancy 这些概念之后，下一步是真正写一个 kernel。Ch03 从 hello-world kernel 一路推到 GEMM 优化，把本章的概念全部落地为可运行的代码。
+
+如果你的兴趣偏 LLM 而非底层 kernel，也可以从这里直接跳到 [Ch04 Transformer 深入](../04-transformer-deep-dive/README.md)。
+
 ## 延伸阅读
 
 - [CUDA C++ Programming Guide - Thread Hierarchy](https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#thread-hierarchy)
