@@ -1,6 +1,6 @@
 # 实验环境搭建指南
 
-> 不需要 A100 也能学完这套文档的大部分内容。本指南按"你手头有什么"来规划环境和实验路径。
+> 不需要 A100 也能学完这套文档的大部分内容。本指南按“你手头有什么”来规划环境和实验路径。
 
 ## 核心原则
 
@@ -55,7 +55,7 @@ pip install transformers datasets matplotlib jupyter tensorboard
 | Ch05 Mixed Precision | FP32 vs FP16 速度/显存对比 | `torch.amp` |
 | Ch05 Gradient Ckpt | 开关对比显存占用 | 小模型即可观察 |
 | Ch05 Profiling | Nsight Systems 看 GPU timeline | 需装 Nsight |
-| Ch06 DDP 入门 | 单机"伪多卡"DDP（1 GPU 模拟概念） | `torchrun --nproc=1` |
+| Ch06 DDP 入门 | 单机“伪多卡”DDP（1 GPU 模拟概念） | `torchrun --nproc=1` |
 | Ch07 Quantization | bitsandbytes 4bit/8bit 推理 | 小模型如 TinyLlama |
 | Ch09 GEMM | 前 3-4 个 kernel 版本（naive→tiled→shared memory） | 适配 sm_86/sm_89 |
 
@@ -93,7 +93,7 @@ pip install tensorboard wandb
 import torch
 if torch.cuda.is_available():
     print(f"GPU: {torch.cuda.get_device_name()}")
-    print(f"显存: {torch.cuda.get_device_properties(0).total_mem / 1e9:.1f} GB")
+    print(f"显存: {torch.cuda.get_device_properties(0).total_memory / 1e9:.1f} GB")
     cap = torch.cuda.get_device_capability()
     print(f"Compute Capability: {cap[0]}.{cap[1]}")
     # GEMM 项目编译时用 -arch=sm_{cap[0]}{cap[1]}
@@ -150,7 +150,7 @@ if torch.cuda.is_available():
 **建议策略：**
 
 1. 本地写好代码和配置，调通逻辑
-2. 云上只做"运行和观察结果"，最大化利用租用时间
+2. 云上只做“运行和观察结果”，最大化利用租用时间
 3. 结果（log、profiler trace、截图）保存到本地后立即释放
 
 ---
@@ -248,7 +248,7 @@ print(f"CUDA available: {torch.cuda.is_available()}")
 
 if torch.cuda.is_available():
     print(f"GPU: {torch.cuda.get_device_name()}")
-    print(f"VRAM: {torch.cuda.get_device_properties(0).total_mem / 1e9:.1f} GB")
+    print(f"VRAM: {torch.cuda.get_device_properties(0).total_memory / 1e9:.1f} GB")
 
     # 简单 matmul benchmark
     x = torch.randn(4096, 4096, device='cuda', dtype=torch.float32)

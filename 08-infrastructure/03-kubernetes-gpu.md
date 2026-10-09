@@ -57,7 +57,7 @@ spec:
   → 3 个 Pod 占着 24 GPU 空等 → 资源浪费 + 死锁
 
 ✅ Gang Scheduling (Volcano/Kueue):
-  "要么 4 个 Pod 全部成功调度，要么一个都不调度"
+  “要么 4 个 Pod 全部成功调度，要么一个都不调度”
   → 集群 GPU 不够时整个 Job 排队，不会占着资源不释放
 ```
 

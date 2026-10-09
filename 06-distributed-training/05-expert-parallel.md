@@ -6,7 +6,7 @@
 
 到目前为止我们讲的模型都是“Dense”的——每个 token 都要过模型的所有参数。但如果一个模型有 8 个 FFN 层的“专家”，每个 token 只选择其中 2 个使用呢？总参数量是 8 倍，但每个 token 的计算量只有 2/8 = 25%。这就是 MoE 的核心价值：**用更少的计算获得更大模型的能力**。
 
-Mixtral 8x7B 就是这个思路：总参数 47B，但每个 token 只激活 12.9B，效果接近 LLaMA 2 70B。
+Mixtral 8x7B 就是这个思路：总参数 47B，但每个 token 只激活 13B，效果接近 LLaMA 2 70B。
 
 但 MoE 给系统带来的挑战是：如何把 8 个 expert 分布到不同 GPU 上，并且高效地把 token 发送到对应的 expert 所在的 GPU？这就是专家并行要解决的问题。它的通信模式是 All-to-All（每张卡向每张其他卡发送不同的数据），比 AllReduce 更难优化。
 
@@ -38,7 +38,7 @@ MoE FFN:
 **MoE 的关键优势**：
 - 总参数量大（如 8×FFN），但每个 token 只激活 Top-K 个 expert（如 K=2）
 - 计算量只增加 ~K/N（而非 N 倍）
-- 例：Mixtral 8x7B — 47B 总参数，但每 token 只用 12.9B
+- 例：Mixtral 8x7B — 47B 总参数，但每 token 只用 13B
 
 ### 专家并行的必要性
 

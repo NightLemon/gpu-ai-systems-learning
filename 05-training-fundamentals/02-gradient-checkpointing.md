@@ -51,7 +51,7 @@ class Model(nn.Module):
 
 ### Selective Checkpoint (Megatron-LM)
 
-不是整层重算，而是选择性地只重算"显存大但计算便宜"的操作：
+不是整层重算，而是选择性地只重算“显存大但计算便宜”的操作：
 - **重算**：Attention Score ($N^2$ 显存)、Softmax、Dropout
 - **保留**：Linear 层输出（显存小但重算贵）
 

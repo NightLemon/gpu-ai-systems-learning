@@ -225,6 +225,6 @@ A: 单张 IB NDR 网卡 400Gbps (~50 GB/s)，但 8×H100 的跨机通信需求�
 | **PFC** | Priority Flow Control，以太网上的流控机制，防止丢包。配置不当会导致 PFC Storm |
 | **ECN** | Explicit Congestion Notification，拥塞通知机制，让发送方感知网络拥塞并主动降速 |
 | **GPUDirect RDMA** | GPU 显存直接通过网卡读写远端 GPU 显存，完全绕过 CPU |
-| **Oversubscription** | 网络上行/下行带宽不对等的比例。2:1 表示下行带宽是上行的 2 倍，跨机架带宽可能不足 |
+| **Oversubscription** | 接入侧汇聚带宽与上行带宽的收敛比。2:1 表示上行只有汇聚带宽的一半，跨机架带宽会减半，比例越高越不适合训练 |
 | **Fat-tree** | 常见的数据中心网络拓扑，由 Leaf、Spine、Core 三层交换机组成 |
 | **Multi-rail** | 一台机器配备多张网卡，每张 GPU 绑定一张网卡，实现带宽叠加 |

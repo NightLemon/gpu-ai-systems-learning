@@ -1,6 +1,6 @@
 # CUDA 内存管理
 
-> 数据在 Host（CPU）和 Device（GPU）之间的搬运往往是性能瓶颈。揌握高效的 GPU 内存分配、传输和异步机制至关重要。
+> 数据在 Host（CPU）和 Device（GPU）之间的搬运往往是性能瓶颈。掌握高效的 GPU 内存分配、传输和异步机制至关重要。
 ## 一个常见的性能陷阱
 
 很多初学者写的第一个 CUDA 程序，跑完后发现 GPU 版比 CPU 版还慢。为什么？因为大部分时间花在了数据从 CPU 内存搬运到 GPU 显存的过程中（通过 PCIe 总线，带宽只有 ~32 GB/s），而不是在 GPU 计算上。
@@ -219,7 +219,7 @@ A: `cudaMallocAsync` 使用 CUDA 的 stream-ordered memory allocator，分配和
 |------|------|
 | **Pinned Memory（页锁定内存）** | 用 `cudaMallocHost()` 分配的 CPU 内存，不会被操作系统换出到磁盘，GPU 的 DMA 引擎可以直接访问，传输更快 |
 | **Unified Memory（统一内存）** | 用 `cudaMallocManaged()` 分配，CPU 和 GPU 可以用同一个指针访问，驱动自动在两者之间迁移数据 |
-| **DMA（Direct Memory Access）** | GPU 上的硬件引擎，可以在不占用 CPU 的情况下在内存之间搉数据 |
+| **DMA（Direct Memory Access）** | GPU 上的硬件引擎，可以在不占用 CPU 的情况下在内存之间搬运数据 |
 | **Stream（流）** | CUDA 中的任务队列，同一 Stream 内的操作按顺序执行，不同 Stream 的操作可以并行 |
 | **`cudaMemcpyAsync`** | 异步内存拷贝，不阻塞 CPU，但要求使用 Pinned Memory 并指定 Stream |
 | **Overlap（重叠）** | 通过多 Stream 让数据传输和 kernel 计算同时进行，缩短总时间 |

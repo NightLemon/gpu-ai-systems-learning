@@ -1,6 +1,6 @@
 # PyTorch 内部机制
 
-> 理解 PyTorch 的执行模型、编译器栈和内存管理——知道框架"怎么跑的"，才能写出高效的训练代码并有效排障。本章按 PyTorch 2.x 的编译器栈讲解，具体 API 细节请以当前 stable 文档为准。
+> 理解 PyTorch 的执行模型、编译器栈和内存管理——知道框架“怎么跑的”，才能写出高效的训练代码并有效排障。本章按 PyTorch 2.x 的编译器栈讲解，具体 API 细节请以当前 stable 文档为准。
 
 ## 执行模型：Eager vs Graph
 
@@ -74,7 +74,7 @@ model = torch.compile(model, mode="max-autotune")
 |------|---------|---------|---------|
 | `default` | 快 | 中等 | 日常开发、快速验证 |
 | `reduce-overhead` | 中等 | 较高 | 训练（减少小 kernel 开销） |
-| `max-autotune` | 慢 | 最高 | 推理（可以接受长编译时间） |
+| `max-autotune` | 慢 | 最高 | 追求极致吞吐、能接受长编译时间（训练/推理均可） |
 
 ### 实际使用
 

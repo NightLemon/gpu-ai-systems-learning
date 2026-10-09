@@ -4,7 +4,7 @@
 
 ## 为什么要了解 GPU 架构？
 
-你可能会问："我又不设计 GPU，为什么要关心它的内部结构？"
+你可能会问：“我又不设计 GPU，为什么要关心它的内部结构？”
 
 原因是：**当你优化 CUDA kernel、选择并行策略、排查训练性能问题时，所有决策的底层逻辑都来自硬件限制**。比如：
 - 为什么 Tensor Parallel 通常优先放在机内？→ 因为它通信频繁且时延敏感，机内 NVLink/NVSwitch 往往比跨机网络更合适
@@ -160,7 +160,7 @@ Forward Pass:
 
 **Q: 为什么 Tensor Core 的 TFLOPS 比 CUDA Core 高这么多？**
 
-A: 因为 Tensor Core 做的是矩阵级别的 FMA，一条指令完成 16×16×16 = 4096 次乘加运算。而 CUDA Core 一条指令只做 1 次 FMA。所以同样的时钟周期内，Tensor Core 的"有效 FLOPS"远高于 CUDA Core。
+A: 因为 Tensor Core 做的是矩阵级别的 FMA，一条指令完成 16×16×16 = 4096 次乘加运算。而 CUDA Core 一条指令只做 1 次 FMA。所以同样的时钟周期内，Tensor Core 的“有效 FLOPS”远高于 CUDA Core。
 
 **Q: TF32 是什么？为什么 A100 引入它？**
 
@@ -201,6 +201,6 @@ A: 能，但有限制：
 | **MIG（Multi-Instance GPU）** | 部分 NVIDIA 数据中心 GPU 支持的功能，可将一张物理 GPU 切分为多个隔离实例；具体 profile 和限制随型号变化 |
 | **Transformer Engine** | Hopper/Blackwell 上面向 Transformer 的低精度加速能力，围绕 FP8/FP4 等格式做 scale 管理和 kernel 优化 |
 | **TF32（TensorFloat-32）** | NVIDIA 定义的特殊浮点格式：8 位指数（同 FP32）+ 10 位尾数（同 FP16）。兼顾范围和速度 |
-| **FP8** | 8 位浮点数格式（E4M3 或 E5M2），Hopper 架构原生支持；训练和推理中都需要结合精度回归使用 |
+| **FP8** | 8 位浮点数格式（E4M3 或 E5M2），Hopper 架构原生支持；训练和推理中都需要配合精度评估使用，确认掉点在可接受范围 |
 | **ECC** | Error-Correcting Code，显存纠错功能。会占用约 6% 的显存容量，但能防止长时间训练中的 bit flip 错误 |
 | **TDP** | Thermal Design Power，热设计功耗，表示芯片满载时的最大功耗 |

@@ -20,7 +20,7 @@ GPU 的计算单元（Tensor Core）每秒能做数百到上千 TFLOPS 级别的
  Register    Shared      L1        L2 Cache      HBM
   File      Memory     Cache                   (Global)
 ┌────────┐ ┌────────┐ ┌────────┐ ┌──────────┐ ┌──────────┐
-│ 64K个   │ │ 164KB  │ │ 与SM   │ │  50 MB   │ │  80 GB   │
+│ 64K个   │ │ 228KB  │ │ 与SM   │ │  50 MB   │ │  80 GB   │
 │ 32-bit  │ │ /SM    │ │ 共享   │ │ (H100)   │ │ (H100)   │
 │ per SM  │ │        │ │ 配置   │ │          │ │          │
 │         │ │        │ │        │ │          │ │          │

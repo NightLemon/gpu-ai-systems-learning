@@ -90,16 +90,19 @@ Preemption (vLLM):
   → 避免 OOM，保证系统稳定
 ```
 
-### 吞吐量公式
+### 吞吐量差异
 
 ```
-Static Batching 吞吐量:
-  Throughput = batch_size / max_sequence_length × tokens_per_second
+Static Batching:
+  整批必须等最长序列跑完才释放 → 有效吞吐被 max_sequence_length 拖累
+  batch 内短请求早已算完，却在空转等待，GPU 利用率下降
 
-Continuous Batching 吞吐量:
-  Throughput ≈ batch_size / avg_sequence_length × tokens_per_second
+Continuous Batching:
+  请求一旦完成立即退出、新请求立即补位 → 有效吞吐由 avg_sequence_length 决定
+  没有"等最长请求"的空转，GPU 持续保持高占用
 
-当 max >> avg 时（常见情况），continuous batching 优势巨大
+当 max_sequence_length >> avg_sequence_length 时（长尾请求常见），
+continuous batching 的吞吐优势尤其明显。
 ```
 
 ## 常见问题
@@ -127,6 +130,6 @@ A: vLLM、TensorRT-LLM、TGI (HuggingFace)、Triton Inference Server 都支持�
 | **Static Batching** | 传统方式：凑齐一个 batch，等最长的请求完成后才处理下一批。短请求空等 |
 | **Continuous Batching** | 每次 decode 迭代都可以加入/移除请求，GPU 始终在做有用工作 |
 | **Iteration-level Scheduling** | Continuous Batching 的另一个名称，强调调度粒度是每次 decode 迭代 |
-| **Chunked Prefill** | 将长 prompt 分成小块，与 decode 交替执行，避免 prefill 霍占 GPU |
+| **Chunked Prefill** | 将长 prompt 分成小块，与 decode 交替执行，避免 prefill 霸占 GPU |
 | **TTFT** | Time to First Token，从收到请求到输出第一个 token 的延迟 |
 | **TPOT** | Time per Output Token，生成每个 token 的平均时间 |

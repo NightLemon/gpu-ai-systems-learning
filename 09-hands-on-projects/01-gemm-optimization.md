@@ -94,7 +94,7 @@ printf("Performance: %.1f GFLOPS (%.1f%% of cuBLAS)\n", gflops, gflops/cublas_gf
 
 ## 参考资料
 
-- [Simon Boehm: How to Optimize a CUDA Matmul Kernel](https://siboehm.com/articles/22/CUDA-MMM) — **必读**，从V0到V5的完整优化过程
+- [Simon Boehm: How to Optimize a CUDA Matmul Kernel](https://siboehm.com/articles/22/CUDA-MMM) — **必读**，从 V0 到 V5 的完整优化过程
 - [Lei Mao: CUDA Matrix Multiplication Optimization](https://leimao.github.io/article/CUDA-Matrix-Multiplication-Optimization/)
 - [CUTLASS GEMM Documentation](https://github.com/NVIDIA/cutlass/blob/main/media/docs/efficient_gemm.md)
 

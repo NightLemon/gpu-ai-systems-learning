@@ -243,9 +243,9 @@ H100 FP32 峰值: 67 TFLOPS
 理论最短时间: 137.4G / 67T = 2.05 ms
 cuBLAS 实际: ~2.3 ms (达到峰值 ~89%)
 
-数据量: (4096² × 3) × 4 = 192 MB
-HBM 带宽: 3.35 TB/s → 最短传时间: 0.057 ms
-Arithmetic Intensity: 137.4G / 192M = 716 FLOPs/Byte >> 20
+数据量: (4096² × 3) × 4 = 192 MiB (约 201 MB)
+HBM 带宽: 3.35 TB/s → 最短传输时间: 0.060 ms
+Arithmetic Intensity: 137.4G / 201M = 683 FLOPs/Byte >> 20
 
 → 这个问题是 Compute-bound（好消息：GEMM 天然适合 GPU）
 ```

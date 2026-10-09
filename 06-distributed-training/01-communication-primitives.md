@@ -221,7 +221,7 @@ def demo_collectives(rank, world_size):
 
 **Q: AllReduce 和 Parameter Server 方案有什么区别？**
 
-A: Parameter Server 使用中心化的服务器节点来聚合梯度，存在带宽瓶颈。AllReduce 是去中心化的——每个 GPU 既是发送者也是接收者。对于 GPU 集训，AllReduce 几乎完全替代了 PS 架构。
+A: Parameter Server 使用中心化的服务器节点来聚合梯度，存在带宽瓶颈。AllReduce 是去中心化的——每个 GPU 既是发送者也是接收者。对于 GPU 集群训练，AllReduce 几乎完全替代了 PS 架构。
 
 **Q: NCCL 和 Gloo 有什么区别？**
 

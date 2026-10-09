@@ -4,7 +4,7 @@
 
 ## 为什么需要 Triton？CUDA 不够用吗？
 
-前面几节你已经看到，写一个高效的 CUDA kernel 需要关心很多底层细节：Shared Memory 分配、Bank Conflict 避免、合并访存、寄存器压力、Occupancy 调优……这些对于専业 GPU 工程师是日常，但对于想快速实现一个自定义算子的 AI 研究员来说是巨大的门槛。
+前面几节你已经看到，写一个高效的 CUDA kernel 需要关心很多底层细节：Shared Memory 分配、Bank Conflict 避免、合并访存、寄存器压力、Occupancy 调优……这些对于专业 GPU 工程师是日常，但对于想快速实现一个自定义算子的 AI 研究员来说是巨大的门槛。
 
 Triton 的定位是：**用 Python 写 GPU kernel，让编译器而不是程序员来处理那些底层优化**。你只需要描述“这个 Block 要处理哪块数据、做什么计算”，Triton 编译器自动帮你安排 Shared Memory、确保合并访存、避免 Bank Conflict。
 
@@ -219,7 +219,7 @@ CUDA 部分结束。接下来可以走两条路：
 - **想先理解模型** → [Ch04 Transformer 深入](../04-transformer-deep-dive/README.md)，把 attention/FFN 的计算结构和显存账理清楚，是后面所有训练/推理优化的前提。
 - **想先做分布式** → [Ch06 分布式训练](../06-distributed-training/README.md) 或 [Ch07 推理优化](../07-inference-optimization/README.md)，CUDA 知识已经够支撑后面的 kernel 解读。
 
-推荐先 Ch04，因为它给后面所有章节提供"对什么做并行/优化"的对象。
+推荐先 Ch04，因为它给后面所有章节提供“对什么做并行/优化”的对象。
 
 ## 延伸阅读
 

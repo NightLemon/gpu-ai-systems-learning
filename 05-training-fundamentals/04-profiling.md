@@ -76,8 +76,8 @@ import torch
 torch.cuda.utilization()  # 0-100%
 
 # 显存
-torch.cuda.memory_allocated() / 1e9  # 已用 (GB)
-torch.cuda.memory_reserved() / 1e9   # 已分配 (GB)
+torch.cuda.memory_allocated() / 1e9  # 实际使用 (GB)
+torch.cuda.memory_reserved() / 1e9   # 保留/缓存总量 (GB, 通常 ≥ 实际使用)
 torch.cuda.max_memory_allocated() / 1e9  # 峰值
 
 # nvidia-smi 持续监控
